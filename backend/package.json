@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "src/server.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/server.js",
@@ -13,7 +14,8 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^17.2.2",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
