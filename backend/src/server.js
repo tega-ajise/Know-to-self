@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import sqlite3 from "sqlite3";
 
 import { execute } from "./db/sql.js";
+import e from "express";
 
 dotenv.config();
 
@@ -13,7 +14,7 @@ const PORT_NO = process.env.PORT;
 const db = new sqlite3.Database("bte.db");
 // const testDb = new sqlite3.Database("chinook.db", sqlite3.OPEN_READWRITE);
 
-const initQuery = `CREATE TABLE IF NOT EXISTS journal_entries (
+const sqlJournalInit = `CREATE TABLE IF NOT EXISTS journal_entries (
 	note_id INTEGER PRIMARY KEY,
    	date TEXT NOT NULL,
 	title TEXT NOT NULL UNIQUE,
@@ -21,7 +22,14 @@ const initQuery = `CREATE TABLE IF NOT EXISTS journal_entries (
     word_count INTEGER DEFAULT 0
 )`;
 
-// datetime('now','localtime'); --> for datetime entry
+const sqlBibleInit = `CREATE TABLE IF NOT EXISTS bible_verses (
+  verse_id INTEGER PRIMARY KEY,
+  passage TEXT NOT NULL UNIQUE, 
+  verse TEXT NOT NULL UNIQUE,
+  completed INTEGER NOT NULL DEFAULT 0
+);`; // completed is a boolean - 0 (false) or 1 (true)
+
+// datetime('now','localtime'); --> for datetime entry, IN the query
 
 app.get("/", (req, res) => {
   console.log("Hey there");
@@ -98,6 +106,7 @@ app.delete("/:row_id", async (req, res) => {
 app.get("/entries", (req, res) => {
   try {
     const query = `SELECT * FROM journal_entries`;
+    // returns all matching rows from table
     db.all(query, (err, rows) => {
       if (!err) {
         return res.status(200).json({ rows });
@@ -114,15 +123,22 @@ app.get("/entries/:row_id", (req, res) => {
   try {
     const { row_id } = req.params;
     const query = `SELECT * FROM journal_entries WHERE note_id = ?`;
-    db.all(query, [row_id], (err, row) => {
+    // returns first matching row from table
+    db.get(query, [row_id], (err, row) => {
       if (!err) {
         return res.status(200).json({ row });
       }
     });
-  } catch (error) {}
+  } catch (error) {
+    console.log("Error getting single row", error);
+    res.status(500).json({ message: "INTERNAL ERROR!" });
+  }
 });
 
-execute(db, initQuery)
+execute(db, sqlJournalInit)
+  .then(() => {
+    return execute(db, sqlBibleInit);
+  })
   .then(() => {
     app.listen(PORT_NO || 5100, () => {
       console.log("App running successfully on PORT " + PORT_NO);
