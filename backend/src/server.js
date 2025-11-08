@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import sqlite3 from "sqlite3";
 
 import { execute } from "./db/sql.js";
-import e from "express";
 
 dotenv.config();
 
@@ -12,7 +11,6 @@ app.use(express.json());
 const PORT_NO = process.env.PORT;
 
 const db = new sqlite3.Database("bte.db");
-// const testDb = new sqlite3.Database("chinook.db", sqlite3.OPEN_READWRITE);
 
 const sqlJournalInit = `CREATE TABLE IF NOT EXISTS journal_entries (
 	note_id INTEGER PRIMARY KEY,
@@ -141,7 +139,7 @@ execute(db, sqlJournalInit)
   })
   .then(() => {
     app.listen(PORT_NO || 5100, () => {
-      console.log("App running successfully on PORT " + PORT_NO);
+      console.error("App running successfully on PORT " + PORT_NO);
     });
   })
-  .catch((e) => console.log("Error in table creation", e));
+  .catch((e) => console.error("Error in table creation", e));
