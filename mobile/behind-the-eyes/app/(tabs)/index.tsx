@@ -3,6 +3,8 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import React, { useState } from "react";
 import { MiniTextEntry } from "@/components/MiniTextEntry";
 import { TextInput, View } from "react-native";
+import ProfileIcon from "@/components/ProfileIcon";
+import { Link } from "expo-router";
 
 const Home = () => {
   const [title, setTitle] = useState("Title Here");
@@ -14,6 +16,9 @@ const Home = () => {
       enableOnAndroid
       enableAutomaticScroll
     >
+      <Link className="ml-auto p-4" href="/profile">
+        <ProfileIcon />
+      </Link>
       <View className="flex-1 flex justify-center">
         <TextInput
           className="text-5xl text-center placeholder:text-black/60 mb-8"

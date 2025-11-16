@@ -12,6 +12,7 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="profile" />
       </Stack>
     </SafeScreen>
   );
