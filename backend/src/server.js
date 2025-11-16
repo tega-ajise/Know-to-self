@@ -3,6 +3,13 @@ import dotenv from "dotenv";
 import sqlite3 from "sqlite3";
 
 import { execute } from "./db/sql.js";
+import {
+  createJournalEntry,
+  updateJournalEntry,
+  deleteJournalEntry,
+  getAllJournalEntries,
+  getOneJournalEntry,
+} from "./controllers/notesController.js";
 
 dotenv.config();
 
@@ -10,7 +17,7 @@ const app = express();
 app.use(express.json());
 const PORT_NO = process.env.PORT;
 
-const db = new sqlite3.Database("bte.db");
+export const db = new sqlite3.Database("bte.db");
 
 const sqlJournalInit = `CREATE TABLE IF NOT EXISTS journal_entries (
 	note_id INTEGER PRIMARY KEY,
@@ -22,7 +29,7 @@ const sqlJournalInit = `CREATE TABLE IF NOT EXISTS journal_entries (
 
 const sqlBibleInit = `CREATE TABLE IF NOT EXISTS bible_verses (
   verse_id INTEGER PRIMARY KEY,
-  passage TEXT NOT NULL UNIQUE, 
+  passage TEXT NOT NULL UNIQUE,
   verse TEXT NOT NULL UNIQUE,
   completed INTEGER NOT NULL DEFAULT 0
 );`; // completed is a boolean - 0 (false) or 1 (true)
@@ -31,53 +38,17 @@ const sqlBibleInit = `CREATE TABLE IF NOT EXISTS bible_verses (
 
 app.get("/", (req, res) => {
   console.log("Hey there");
-  res.redirect("/login");
+  res.redirect("/login"); // redirects to a different route
 });
 
 app.get("/login", (req, res) => {
-  res.send("Hey again");
+  res.send("Hey again"); // send is just plaintext version of res.json()
 });
 
 // POST Request will be sumn like this
-app.post("/", async (req, res) => {
-  try {
-    if (Object.values(req.body).some((arg) => !arg)) {
-      return res.status(400).json({ message: "Malformed request body" });
-    }
-    const timestamp = new Date();
-    const { date, title, content } = req.body;
-    const query = `INSERT INTO journal_entries(note_id, date, title, content) VALUES (?,?,?,?)`;
-    await execute(db, query, [timestamp.getTime(), date, title, content]);
-    return res.status(201).json({ message: "New entry created " });
-  } catch (error) {
-    console.log("Error in request", error);
-    return res.status(500);
-  }
-});
+app.post("/", createJournalEntry);
 
-app.put("/:row_id", async (req, res) => {
-  try {
-    // Never put string quotes '' around values to format them for query
-    // Pass ? parameter instead
-    const { row_id } = req.params;
-
-    if (Number.isNaN(parseInt(row_id)))
-      return res.status(400).json({ message: "Bad parameter mister" });
-
-    const updates = req.body;
-    const parsedUpdate = Object.keys(updates)
-      .map((k) => `${k} = ?`)
-      .join(",");
-
-    const query = `UPDATE journal_entries SET ${parsedUpdate} WHERE note_id = ?`;
-
-    await execute(db, query, [...Object.values(updates), row_id]);
-    return res.status(200).json({ message: "Successfully updated!" });
-  } catch (error) {
-    console.log("Caught an error", error);
-    return res.status(500).json({ message: "Internal server errorrrr" });
-  }
-});
+app.put("/:row_id", updateJournalEntry);
 
 // Eventually will pass this to middleware that will check if that row id exists first
 /**Something like:
@@ -85,53 +56,11 @@ app.put("/:row_id", async (req, res) => {
  * router.use("/:row_id", checkIdExists) or app.use or whichever one
  * router.route("/:row_id").put().delete()
  * **/
-app.delete("/:row_id", async (req, res) => {
-  try {
-    const { row_id } = req.params;
-    if (Number.isNaN(parseInt(row_id)))
-      return res.status(400).json({ message: "Bad parameter mister" });
+app.delete("/:row_id", deleteJournalEntry);
 
-    const query = `DELETE FROM journal_entries WHERE note_id = ?`;
-    await execute(db, query, [row_id]);
-    return res.status(200).json({ message: "Successfully deleted" });
-  } catch (error) {
-    console.log("Error deleting", error);
-    res.status(500).json({ message: "INTERNAL SERVER ERROR" });
-  }
-});
+app.get("/entries", getAllJournalEntries);
 
-// get all
-app.get("/entries", (req, res) => {
-  try {
-    const query = `SELECT * FROM journal_entries`;
-    // returns all matching rows from table
-    db.all(query, (err, rows) => {
-      if (!err) {
-        return res.status(200).json({ rows });
-      }
-    });
-  } catch (error) {
-    console.log("Error getting all rows", error);
-    res.status(500).json({ message: "ERRRRRR" });
-  }
-});
-
-// get one
-app.get("/entries/:row_id", (req, res) => {
-  try {
-    const { row_id } = req.params;
-    const query = `SELECT * FROM journal_entries WHERE note_id = ?`;
-    // returns first matching row from table
-    db.get(query, [row_id], (err, row) => {
-      if (!err) {
-        return res.status(200).json({ row });
-      }
-    });
-  } catch (error) {
-    console.log("Error getting single row", error);
-    res.status(500).json({ message: "INTERNAL ERROR!" });
-  }
-});
+app.get("/entries/:row_id", getOneJournalEntry);
 
 execute(db, sqlJournalInit)
   .then(() => {
