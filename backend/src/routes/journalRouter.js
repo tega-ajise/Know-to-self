@@ -5,7 +5,7 @@ import {
   getAllJournalEntries,
   getOneJournalEntry,
   updateJournalEntry,
-} from "../controllers/notesController";
+} from "../controllers/journalController.js";
 
 const router = express.Router();
 

@@ -1,7 +1,9 @@
-export default HTTP_ERRORS = {
+const HTTP_ERRORS = {
   "NOT FOUND": 404,
   FORBIDDEN: 403,
   "RATE LIMIT": 429,
   "BAD REQUEST": 400,
   "METHOD NOT ALLOWED": 405,
 };
+
+export default HTTP_ERRORS;

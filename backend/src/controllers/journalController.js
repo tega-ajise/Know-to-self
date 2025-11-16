@@ -1,7 +1,7 @@
 // automatically handles try catch blocks
-import { asyncHandler } from "express-async-handler";
-import { db } from "../server";
-import { execute } from "../db/sql";
+import asyncHandler from "express-async-handler";
+import { db } from "../server.js";
+import { execute } from "../db/sql.js";
 
 export const createJournalEntry = asyncHandler(async (req, res) => {
   if (Object.values(req.body).some((arg) => !arg)) {
@@ -13,7 +13,7 @@ export const createJournalEntry = asyncHandler(async (req, res) => {
   const { date, title, content } = req.body;
   const query = `INSERT INTO journal_entries(note_id, date, title, content) VALUES (?,?,?,?)`;
   await execute(db, query, [timestamp.getTime(), date, title, content]);
-  return res.status(201).json({ message: "New entry created " });
+  return res.status(201).json({ message: "New entry created" });
 });
 
 export const updateJournalEntry = asyncHandler(async (req, res) => {

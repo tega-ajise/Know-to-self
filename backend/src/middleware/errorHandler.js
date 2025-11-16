@@ -1,4 +1,4 @@
-import HTTP_ERRORS from "../consts";
+import HTTP_ERRORS from "../consts.js";
 
 const errorHandler = (err, req, res, next) => {
   const statusCode = res.statusCode ?? 500;
