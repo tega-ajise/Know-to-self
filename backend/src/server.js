@@ -3,18 +3,19 @@ import dotenv from "dotenv";
 import sqlite3 from "sqlite3";
 
 import { execute } from "./db/sql.js";
-import {
-  createJournalEntry,
-  updateJournalEntry,
-  deleteJournalEntry,
-  getAllJournalEntries,
-  getOneJournalEntry,
-} from "./controllers/notesController.js";
+import journalRouter from "./routes/journalRouter.js";
+import errorHandler from "./middleware/errorHandler.js";
 
 dotenv.config();
 
 const app = express();
-app.use(express.json());
+
+/** MIDDLEWARE - they go in order */
+app.use(express.json()); // a "root" middleware
+app.use("/", journalRouter); // the next "root" middleware
+// rate limiter would go here
+app.use(errorHandler);
+
 const PORT_NO = process.env.PORT;
 
 export const db = new sqlite3.Database("bte.db");
@@ -44,23 +45,6 @@ app.get("/", (req, res) => {
 app.get("/login", (req, res) => {
   res.send("Hey again"); // send is just plaintext version of res.json()
 });
-
-// POST Request will be sumn like this
-app.post("/", createJournalEntry);
-
-app.put("/:row_id", updateJournalEntry);
-
-// Eventually will pass this to middleware that will check if that row id exists first
-/**Something like:
- * const router = expresss.Router()
- * router.use("/:row_id", checkIdExists) or app.use or whichever one
- * router.route("/:row_id").put().delete()
- * **/
-app.delete("/:row_id", deleteJournalEntry);
-
-app.get("/entries", getAllJournalEntries);
-
-app.get("/entries/:row_id", getOneJournalEntry);
 
 execute(db, sqlJournalInit)
   .then(() => {
