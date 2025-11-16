@@ -1,7 +1,7 @@
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 import React, { useState } from "react";
-import { MiniTextEntry } from "@/components/MiniTextEntry";
+import { MiniNote } from "@/components/MiniNote";
 import { TextInput, View } from "react-native";
 import ProfileIcon from "@/components/ProfileIcon";
 import { Link } from "expo-router";
@@ -26,7 +26,7 @@ const Home = () => {
           value={title}
           onChangeText={(t) => setTitle(t)}
         />
-        <MiniTextEntry />
+        <MiniNote />
       </View>
     </KeyboardAwareScrollView>
   );

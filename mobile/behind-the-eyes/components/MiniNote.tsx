@@ -1,7 +1,8 @@
 import { Ionicons, FontAwesome5, FontAwesome } from "@expo/vector-icons";
+import { Link } from "expo-router";
 import { View, TouchableOpacity, TextInput } from "react-native";
 
-export const MiniTextEntry = () => {
+export const MiniNote = () => {
   return (
     <View
       style={{
@@ -11,17 +12,19 @@ export const MiniTextEntry = () => {
         shadowRadius: 3.84,
         elevation: 5,
       }}
-      className="mx-auto border rounded-lg min-h-[270px]"
+      className="mx-auto rounded-lg min-h-[270px]"
     >
-      <View className="w-full bg-[#FF6B85] flex flex-row justify-around px-6 py-2 rounded-sm">
-        <TouchableOpacity>
-          <Ionicons name="calendar-clear" size={40} color="#020873" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <FontAwesome5 name="external-link-alt" size={38} color="#020873" />
-        </TouchableOpacity>
+      <View className="bg-[#FF6B85] rounded-[4px] translate-y-1 z-10">
+        <View className="w-full flex flex-row justify-around px-6 py-2">
+          <TouchableOpacity>
+            <Ionicons name="calendar-clear" size={40} color="#020873" />
+          </TouchableOpacity>
+          <Link href="/full-screen-note">
+            <FontAwesome5 name="external-link-alt" size={38} color="#020873" />
+          </Link>
+        </View>
       </View>
-      <View className="flex flex-1 bg-[rgba(217,7,45,0.8)] p-2">
+      <View className="flex flex-1 border-x-4 border-b-4 border-[#D9072D] bg-[rgba(217,7,45,0.7)] p-2">
         <TextInput
           multiline
           numberOfLines={5}
