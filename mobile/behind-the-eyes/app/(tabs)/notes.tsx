@@ -58,7 +58,12 @@ const Notes = () => {
         progress={progress}
         data={data}
         dotStyle={{ backgroundColor: "rgba(0,0,0,0.2)", borderRadius: 50 }}
-        containerStyle={{ gap: 5, marginTop: 10, position: "fixed" }}
+        containerStyle={{
+          gap: 5,
+          marginHorizontal: 10,
+          flexWrap: "wrap",
+          justifyContent: "flex-start",
+        }}
         onPress={onPressPagination}
       />
     </KeyboardAwareScrollView>

@@ -2,19 +2,22 @@ import { Stack } from "expo-router";
 import SafeScreen from "@/components/SafeArea";
 
 import "@/global.css";
+import { AppProvider } from "@/hooks/provider";
 
 export default function RootLayout() {
   return (
-    <SafeScreen>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="profile" />
-        <Stack.Screen name="full-screen-note" />
-      </Stack>
-    </SafeScreen>
+    <AppProvider>
+      <SafeScreen>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="profile" />
+          <Stack.Screen name="full-screen-note" />
+        </Stack>
+      </SafeScreen>
+    </AppProvider>
   );
 }
