@@ -4,7 +4,10 @@ import React from "react";
 const Spotlight = () => {
   return (
     <View>
-      <Text>Spotlight</Text>
+      {/** Verse of the day */}
+      <View></View>
+      {/** Note of the day */}
+      <View></View>
     </View>
   );
 };
