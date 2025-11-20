@@ -1,8 +1,12 @@
 import { Ionicons, FontAwesome5, FontAwesome } from "@expo/vector-icons";
 import { Link } from "expo-router";
+import { useState } from "react";
 import { View, TouchableOpacity, TextInput } from "react-native";
+import { NotificationSetter } from "./NotificationSetter";
 
 export const MiniNote = () => {
+  const [openDatePicker, setOpenDatePicker] = useState(false);
+
   return (
     <View
       style={{
@@ -16,7 +20,7 @@ export const MiniNote = () => {
     >
       <View className="bg-[#FF6B85] rounded-[4px] translate-y-1 z-10">
         <View className="w-full flex flex-row justify-around px-6 py-2">
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => setOpenDatePicker(true)}>
             <Ionicons name="calendar-clear" size={40} color="#020873" />
           </TouchableOpacity>
           <Link href="/full-screen-note">
@@ -35,6 +39,8 @@ export const MiniNote = () => {
           <FontAwesome name="check" size={30} />
         </TouchableOpacity>
       </View>
+
+      <NotificationSetter open={openDatePicker} setOpen={setOpenDatePicker} />
     </View>
   );
 };
