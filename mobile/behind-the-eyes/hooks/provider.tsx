@@ -1,41 +1,77 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+// hooks/provider.tsx
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import * as SQLite from "expo-sqlite";
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
+import { NoteDTO } from "@/constants/types";
 
 interface AppContextType {
-  openModal?: boolean;
-  setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
+  db: SQLite.SQLiteDatabase;
+  currentNote: NoteDTO;
+  setCurrentNote: React.Dispatch<React.SetStateAction<NoteDTO>>;
+  ID_TRACKER: number;
 }
 
-const db = SQLite.openDatabaseSync("bte.db");
-const AppContext = createContext<AppContextType>({} as AppContextType);
+const AppContext = createContext<AppContextType | null>(null);
 
-export const AppProvider = ({ children }: { children: React.ReactNode }) => {
+// Inner component that actually uses the DB
+const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
+  const db = SQLite.useSQLiteContext(); // comes from SQLiteProvider
   useDrizzleStudio(db);
 
-  useEffect(() => {
-    initDB();
-  }, []);
+  const [currentNote, setCurrentNote] = useState<NoteDTO>({
+    title: "",
+    content: "",
+    createdAt: undefined,
+    word_count: 0,
+  });
 
-  async function initDB() {
-    await db.execAsync(`
+  const ID_TRACKER = useMemo(() => {
+    const rows = db.getAllSync(`SELECT * FROM journal_entries`);
+    return rows?.length ?? 0;
+  }, [db]);
+
+  useEffect(() => {
+    const initDB = async () => {
+      await db.execAsync(`
         PRAGMA journal_mode = WAL;
         CREATE TABLE IF NOT EXISTS journal_entries (
-	note_id INTEGER PRIMARY KEY,
-   	date TEXT NOT NULL,
-	title TEXT NOT NULL UNIQUE,
-    content TEXT NOT NULL,
-    word_count INTEGER DEFAULT 0);
+          note_id INTEGER PRIMARY KEY,
+          date TEXT,
+          title TEXT NOT NULL UNIQUE,
+          content TEXT NOT NULL,
+          word_count INTEGER DEFAULT 0,
+          created_at TEXT NOT NULL
+        );
       `);
-  }
+    };
+
+    initDB();
+  }, [db]);
+
+  const contextReturnValue = {
+    db,
+    currentNote,
+    setCurrentNote,
+    ID_TRACKER,
+  };
 
   return (
-    <SQLite.SQLiteProvider
-      databaseName="bte.db"
-      useSuspense
-      directory="../assets"
-    >
-      <AppContext.Provider value={{}}>{children}</AppContext.Provider>;
+    <AppContext.Provider value={contextReturnValue}>
+      {children}
+    </AppContext.Provider>
+  );
+};
+
+export const AppProvider = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <SQLite.SQLiteProvider databaseName="bte.db" useSuspense>
+      <AppProviderInner>{children}</AppProviderInner>
     </SQLite.SQLiteProvider>
   );
 };

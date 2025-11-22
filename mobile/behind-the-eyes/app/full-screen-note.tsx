@@ -4,9 +4,11 @@ import { GIBBERISH } from "@/constants/consts";
 import { FontAwesome, AntDesign } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useAppProvider } from "@/hooks/provider";
 
 const FullScreenNote = () => {
   const router = useRouter();
+  const { currentNote, setCurrentNote } = useAppProvider();
 
   return (
     <KeyboardAwareScrollView
@@ -22,11 +24,28 @@ const FullScreenNote = () => {
         >
           <AntDesign name="shrink" size={24} color="black" />
         </TouchableOpacity>
-        <TextInput placeholder="Title" className="text-4xl color-white" />
+        <TextInput
+          placeholder="Title"
+          className="text-4xl color-white"
+          value={currentNote.title}
+          onChangeText={(t) =>
+            setCurrentNote((prev) => ({
+              ...prev,
+              title: t,
+            }))
+          }
+        />
         <TextInput
           multiline
           placeholder={GIBBERISH}
           className="text-xl color-white"
+          value={currentNote.content}
+          onChangeText={(t) =>
+            setCurrentNote((prev) => ({
+              ...prev,
+              content: t,
+            }))
+          }
         />
         <TouchableOpacity className="absolute bottom-2 right-2">
           <FontAwesome name="check" size={30} />

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useAppProvider } from "@/hooks/provider";
+import React from "react";
 import DatePicker from "react-native-date-picker";
 
 export const NotificationSetter = ({
@@ -8,7 +9,7 @@ export const NotificationSetter = ({
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-  const [date, setDate] = useState(new Date());
+  const { currentNote, setCurrentNote } = useAppProvider();
 
   return (
     <>
@@ -16,11 +17,12 @@ export const NotificationSetter = ({
         title="Set the notification time"
         modal
         open={open}
-        date={date}
+        date={currentNote.date ?? new Date()}
+        minimumDate={new Date()}
         onConfirm={(date) => {
           setOpen(false);
-          setDate(date);
-          console.log({ date });
+          setCurrentNote((prev) => ({ ...prev, date }));
+          console.log({ currentNote });
         }}
         onCancel={() => {
           setOpen(false);

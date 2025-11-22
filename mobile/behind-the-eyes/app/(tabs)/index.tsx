@@ -6,9 +6,10 @@ import { Modal, TextInput, View, Pressable } from "react-native";
 import ProfileIcon from "@/components/ProfileIcon";
 import { Link } from "expo-router";
 import PassageModal from "@/components/PassageModal";
+import { useAppProvider } from "@/hooks/provider";
 
 const Home = () => {
-  const [title, setTitle] = useState("Title Here");
+  const { currentNote, setCurrentNote } = useAppProvider();
   const [openModal, setOpenModal] = useState<boolean>(true);
 
   return (
@@ -38,8 +39,13 @@ const Home = () => {
           <TextInput
             className="text-5xl text-center placeholder:text-black/60 mb-8"
             placeholder="Title Here"
-            value={title}
-            onChangeText={(t) => setTitle(t)}
+            value={currentNote.title}
+            onChangeText={(t) =>
+              setCurrentNote((prev) => ({
+                ...prev,
+                title: t,
+              }))
+            }
           />
           <MiniNote />
         </View>
