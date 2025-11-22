@@ -35,7 +35,7 @@ const sqlBibleInit = `CREATE TABLE IF NOT EXISTS bible_verses (
   completed INTEGER NOT NULL DEFAULT 0
 );`; // completed is a boolean - 0 (false) or 1 (true)
 
-// datetime('now','localtime'); --> for datetime entry, IN the query
+// datetime('now','localtime'); --> for datetime entry, IN the query when passing VALUES
 
 app.get("/", (req, res) => {
   console.log("Hey there");
