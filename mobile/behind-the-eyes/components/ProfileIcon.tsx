@@ -7,7 +7,7 @@ const ProfileIcon = () => {
   return (
     <View>
       <Image
-        source={require("../assets/profile-photo.png")}
+        source={require("../assets/images/profile-photo.png")}
         style={styles.avatar}
       />
     </View>
