@@ -1,5 +1,5 @@
 import { Dimensions, View, Text } from "react-native";
-import React from "react";
+import React, { useMemo } from "react";
 import { useSharedValue } from "react-native-reanimated";
 import Carousel, {
   ICarouselInstance,
@@ -8,14 +8,20 @@ import Carousel, {
 import MiniEditNote from "@/components/MiniEditNote";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
+import { useSQLiteContext } from "expo-sqlite";
 
-const data = [...new Array(6).keys()];
+// const data = [...new Array(6).keys()];
 const width = Dimensions.get("window").width;
 const height = Dimensions.get("window").height;
 
 const Notes = () => {
   const ref = React.useRef<ICarouselInstance>(null);
   const progress = useSharedValue<number>(0);
+  const db = useSQLiteContext();
+  const data = useMemo(() => {
+    const allEntries = db.getAllSync("SELECT * FROM journal_entries");
+    return allEntries;
+  }, [db]);
 
   const onPressPagination = (index: number) => {
     ref.current?.scrollTo({
@@ -36,20 +42,22 @@ const Notes = () => {
         height={height - 300}
         data={data}
         onProgressChange={progress}
-        renderItem={({ index }) => (
+        renderItem={({ item, index }) => (
           <View className="translate-y-16">
-            <Text className="mx-auto text-5xl font-bold">Title Here</Text>
+            <Text className="mx-auto text-5xl font-bold">{item?.title}</Text>
             <View className="mx-auto mt-8">
               <View className="flex flex-row items-center gap-1">
                 <FontAwesome5 name="pen" size={18} color="#A43232" />
-                <Text className="text-xl">May 23, 2002</Text>
+                <Text className="text-xl">{item.created_at}</Text>
               </View>
-              <MiniEditNote />
+              <MiniEditNote id={index} />
             </View>
-            <View className="mt-4 mx-auto flex-row items-center gap-2">
-              <FontAwesome name="bell" size={24} color="#A43232" />
-              <Text className="text-xl font-semibold">May 23, 2002</Text>
-            </View>
+            {item?.date && (
+              <View className="mt-4 mx-auto flex-row items-center gap-2">
+                <FontAwesome name="bell" size={24} color="#A43232" />
+                <Text className="text-xl font-semibold">{item?.date}</Text>
+              </View>
+            )}
           </View>
         )}
       />

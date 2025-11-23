@@ -4,6 +4,7 @@ import { useState } from "react";
 import { View, TouchableOpacity, TextInput } from "react-native";
 import { NotificationSetter } from "./NotificationSetter";
 import { useAppProvider } from "@/hooks/provider";
+import { DATE_FORMAT_OPTIONS } from "@/constants/consts";
 
 export const MiniNote = () => {
   const [openDatePicker, setOpenDatePicker] = useState(false);
@@ -15,15 +16,33 @@ export const MiniNote = () => {
     }
     const currentDate = new Date();
     const title =
-      currentNote.title === "" ? currentDate.getUTCDate() : currentNote.title;
+      currentNote.title === ""
+        ? currentDate.toLocaleDateString()
+        : currentNote.title;
 
     const statement = await db.prepareAsync(
-      `INSERT INTO journal_entries(note_id, date, title, content) VALUES (?,?,?,?)`
+      `INSERT INTO journal_entries(note_id, date, title, content, created_at, word_count) VALUES (?,?,?,?,?,?)`
     );
     try {
-      statement.executeAsync([ID_TRACKER]);
+      await statement.executeAsync([
+        ID_TRACKER,
+        currentNote?.date?.toLocaleDateString(undefined, DATE_FORMAT_OPTIONS) ??
+          "",
+        title,
+        currentNote.content,
+        currentDate?.toLocaleDateString(undefined, DATE_FORMAT_OPTIONS),
+        currentNote.word_count,
+      ]); /** TODO */
+    } catch (e: unknown) {
+      alert((e as Error)?.message);
     } finally {
-      statement.finalizeAsync();
+      setCurrentNote({
+        content: "",
+        title: "",
+        createdAt: undefined,
+        word_count: 0,
+      });
+      await statement.finalizeAsync();
     }
   };
 

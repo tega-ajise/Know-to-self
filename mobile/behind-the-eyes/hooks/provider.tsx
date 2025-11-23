@@ -1,14 +1,14 @@
-// hooks/provider.tsx
 import React, {
   createContext,
+  Suspense,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from "react";
 import * as SQLite from "expo-sqlite";
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 import { NoteDTO } from "@/constants/types";
+import LoadingScreen from "@/components/LoadingScreen";
 
 interface AppContextType {
   db: SQLite.SQLiteDatabase;
@@ -23,6 +23,7 @@ const AppContext = createContext<AppContextType | null>(null);
 const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
   const db = SQLite.useSQLiteContext(); // comes from SQLiteProvider
   useDrizzleStudio(db);
+  console.log(db.databasePath);
 
   const [currentNote, setCurrentNote] = useState<NoteDTO>({
     title: "",
@@ -36,9 +37,21 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
     return rows?.length ?? 0;
   }, [db]);
 
-  useEffect(() => {
-    const initDB = async () => {
-      await db.execAsync(`
+  const contextValue = {
+    db,
+    currentNote,
+    setCurrentNote,
+    ID_TRACKER,
+  };
+
+  return (
+    <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>
+  );
+};
+
+export const AppProvider = ({ children }: { children: React.ReactNode }) => {
+  const initDBIfNeeded = async (db: SQLite.SQLiteDatabase) => {
+    await db.execAsync(`
         PRAGMA journal_mode = WAL;
         CREATE TABLE IF NOT EXISTS journal_entries (
           note_id INTEGER PRIMARY KEY,
@@ -49,30 +62,17 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
           created_at TEXT NOT NULL
         );
       `);
-    };
-
-    initDB();
-  }, [db]);
-
-  const contextReturnValue = {
-    db,
-    currentNote,
-    setCurrentNote,
-    ID_TRACKER,
   };
-
   return (
-    <AppContext.Provider value={contextReturnValue}>
-      {children}
-    </AppContext.Provider>
-  );
-};
-
-export const AppProvider = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <SQLite.SQLiteProvider databaseName="bte.db" useSuspense>
-      <AppProviderInner>{children}</AppProviderInner>
-    </SQLite.SQLiteProvider>
+    <Suspense fallback={<LoadingScreen />}>
+      <SQLite.SQLiteProvider
+        databaseName="bte.db"
+        useSuspense
+        onInit={initDBIfNeeded}
+      >
+        <AppProviderInner>{children}</AppProviderInner>
+      </SQLite.SQLiteProvider>
+    </Suspense>
   );
 };
 

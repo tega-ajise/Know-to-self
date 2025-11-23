@@ -11,3 +11,10 @@ export const STATS = {
 
 export const GIBBERISH = `Lorem ipsum dolor sit amet consectetur. Nunc sit egestas adipiscing id porta cras massa scelerisque. Id elit magna ullamcorper morbi vitae nunc et proin convallis. Vitae neque porta eget nisl. Quam vitae eu senectus mi morbi aliquet adipiscing eu parturient.
 Rhoncus consequat lacus arcu sapien.`;
+
+export const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
+  weekday: "long",
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+};

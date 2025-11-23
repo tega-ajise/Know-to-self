@@ -48,9 +48,7 @@
           "icon": "./assets/profile_photo.png",
           "color": "#DC143C",
           "defaultChannel": "default",
-          "sounds": [
-            "./assets/audio/mixkit-positive-notification-951.wav"
-          ],
+          "sounds": ["./assets/audio/mixkit-positive-notification-951.wav"],
           "enableBackgroundRemoteNotifications": false
         }
       ],

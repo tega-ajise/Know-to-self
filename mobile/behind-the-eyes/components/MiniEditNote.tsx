@@ -1,9 +1,20 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { View, TextInput, TouchableOpacity } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { Link } from "expo-router";
+import { useSQLiteContext } from "expo-sqlite";
 
-const MiniEditNote = () => {
+const MiniEditNote = ({ id }: { id: number }) => {
+  const db = useSQLiteContext();
+
+  const [isReadOnly, setIsReadOnly] = useState<boolean>(true);
+
+  const fetchNote = useMemo(() => {
+    return db.getFirstSync("SELECT * FROM journal_entries WHERE note_id = ?", [
+      id,
+    ]);
+  }, [db, id]);
+
   return (
     <View
       style={{
@@ -13,7 +24,7 @@ const MiniEditNote = () => {
         shadowRadius: 3.84,
         elevation: 5,
       }}
-      className="mx-auto rounded-lg min-h-[270px]"
+      className="mx-auto rounded-lg min-h-[270px] w-5/6"
     >
       <View className="bg-[#FF6B85] rounded-[4px] translate-y-1 z-10">
         <View className="w-full flex flex-row justify-around px-6 py-2">
@@ -34,8 +45,13 @@ const MiniEditNote = () => {
           numberOfLines={5}
           placeholder="Today I..."
           className="p-2 flex-1 text-3xl"
+          value={fetchNote?.content}
+          readOnly={isReadOnly}
         />
-        <TouchableOpacity className="self-end">
+        <TouchableOpacity
+          className="self-end"
+          onPress={() => setIsReadOnly(false)}
+        >
           <FontAwesome5
             name="edit"
             size={24}
