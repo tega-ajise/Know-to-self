@@ -1,5 +1,5 @@
 import { Dimensions, View, Text } from "react-native";
-import React, { useMemo } from "react";
+import React, { useCallback, useState } from "react";
 import { useSharedValue } from "react-native-reanimated";
 import Carousel, {
   ICarouselInstance,
@@ -9,8 +9,9 @@ import MiniEditNote from "@/components/MiniEditNote";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import { useSQLiteContext } from "expo-sqlite";
+import { NoteDTO } from "@/constants/types";
+import { useFocusEffect } from "expo-router";
 
-// const data = [...new Array(6).keys()];
 const width = Dimensions.get("window").width;
 const height = Dimensions.get("window").height;
 
@@ -18,10 +19,33 @@ const Notes = () => {
   const ref = React.useRef<ICarouselInstance>(null);
   const progress = useSharedValue<number>(0);
   const db = useSQLiteContext();
-  const data = useMemo(() => {
-    const allEntries = db.getAllSync("SELECT * FROM journal_entries");
-    return allEntries;
-  }, [db]);
+
+  const [data, setData] = useState<NoteDTO[]>([] as NoteDTO[]);
+
+  // Similar implementation to refreshControl in the FlatList
+  useFocusEffect(
+    // wrapped in useCallback to avoid running this too often
+    // as it runs whenever a component is focused
+    useCallback(() => {
+      let isPageActive = true;
+
+      const loadData = async () => {
+        try {
+          const entries = await db.getAllAsync<NoteDTO>(
+            "SELECT * FROM journal_entries"
+          );
+          if (isPageActive) setData(entries);
+        } catch (error) {
+          console.error("Could not load notes", error);
+        }
+      };
+      loadData();
+
+      return () => {
+        isPageActive = false;
+      };
+    }, [setData, db]) // setters are stable, will never change, same with db, just for linting
+  );
 
   const onPressPagination = (index: number) => {
     ref.current?.scrollTo({
@@ -48,14 +72,16 @@ const Notes = () => {
             <View className="mx-auto mt-8">
               <View className="flex flex-row items-center gap-1">
                 <FontAwesome5 name="pen" size={18} color="#A43232" />
-                <Text className="text-xl">{item.created_at}</Text>
+                <Text className="text-xl">{item.created_at as string}</Text>
               </View>
-              <MiniEditNote id={index} />
+              <MiniEditNote id={item.note_id!} />
             </View>
             {item?.date && (
               <View className="mt-4 mx-auto flex-row items-center gap-2">
                 <FontAwesome name="bell" size={24} color="#A43232" />
-                <Text className="text-xl font-semibold">{item?.date}</Text>
+                <Text className="text-xl font-semibold">
+                  {item?.date as string}
+                </Text>
               </View>
             )}
           </View>

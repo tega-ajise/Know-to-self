@@ -3,16 +3,18 @@ import { View, TextInput, TouchableOpacity } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
+import { NoteDTO } from "@/constants/types";
 
 const MiniEditNote = ({ id }: { id: number }) => {
   const db = useSQLiteContext();
 
   const [isReadOnly, setIsReadOnly] = useState<boolean>(true);
 
-  const fetchNote = useMemo(() => {
-    return db.getFirstSync("SELECT * FROM journal_entries WHERE note_id = ?", [
-      id,
-    ]);
+  const activeNote = useMemo(() => {
+    return db.getFirstSync<NoteDTO & { note_id: number }>(
+      "SELECT * FROM journal_entries WHERE note_id = ?",
+      [id]
+    ) as NoteDTO & { note_id: number };
   }, [db, id]);
 
   return (
@@ -31,7 +33,12 @@ const MiniEditNote = ({ id }: { id: number }) => {
           <TouchableOpacity>
             <Ionicons name="calendar-clear" size={40} color="#020873" />
           </TouchableOpacity>
-          <Link href="/full-screen-note">
+          <Link
+            href={{
+              pathname: "/[noteId]",
+              params: { noteId: activeNote.note_id },
+            }}
+          >
             <FontAwesome5 name="external-link-alt" size={38} color="#020873" />
           </Link>
           <TouchableOpacity>
@@ -45,7 +52,7 @@ const MiniEditNote = ({ id }: { id: number }) => {
           numberOfLines={5}
           placeholder="Today I..."
           className="p-2 flex-1 text-3xl"
-          value={fetchNote?.content}
+          value={activeNote?.content}
           readOnly={isReadOnly}
         />
         <TouchableOpacity

@@ -17,7 +17,7 @@ export const NotificationSetter = ({
         title="Set the notification time"
         modal
         open={open}
-        date={currentNote.date ?? new Date()}
+        date={(currentNote.date as Date) ?? new Date()}
         minimumDate={new Date()}
         onConfirm={(date) => {
           setOpen(false);

@@ -4,47 +4,10 @@ import { useState } from "react";
 import { View, TouchableOpacity, TextInput } from "react-native";
 import { NotificationSetter } from "./NotificationSetter";
 import { useAppProvider } from "@/hooks/provider";
-import { DATE_FORMAT_OPTIONS } from "@/constants/consts";
 
 export const MiniNote = () => {
   const [openDatePicker, setOpenDatePicker] = useState(false);
-  const { currentNote, setCurrentNote, db, ID_TRACKER } = useAppProvider();
-
-  const handleNoteSubmit = async () => {
-    if (!currentNote.content || currentNote.content === "") {
-      return alert("No note content!");
-    }
-    const currentDate = new Date();
-    const title =
-      currentNote.title === ""
-        ? currentDate.toLocaleDateString()
-        : currentNote.title;
-
-    const statement = await db.prepareAsync(
-      `INSERT INTO journal_entries(note_id, date, title, content, created_at, word_count) VALUES (?,?,?,?,?,?)`
-    );
-    try {
-      await statement.executeAsync([
-        ID_TRACKER,
-        currentNote?.date?.toLocaleDateString(undefined, DATE_FORMAT_OPTIONS) ??
-          "",
-        title,
-        currentNote.content,
-        currentDate?.toLocaleDateString(undefined, DATE_FORMAT_OPTIONS),
-        currentNote.word_count,
-      ]); /** TODO */
-    } catch (e: unknown) {
-      alert((e as Error)?.message);
-    } finally {
-      setCurrentNote({
-        content: "",
-        title: "",
-        createdAt: undefined,
-        word_count: 0,
-      });
-      await statement.finalizeAsync();
-    }
-  };
+  const { currentNote, setCurrentNote, handleNoteSubmit } = useAppProvider();
 
   return (
     <View
@@ -62,7 +25,12 @@ export const MiniNote = () => {
           <TouchableOpacity onPress={() => setOpenDatePicker(true)}>
             <Ionicons name="calendar-clear" size={40} color="#020873" />
           </TouchableOpacity>
-          <Link href="/full-screen-note">
+          <Link
+            href={{
+              pathname: "/[noteId]",
+              params: { noteId: currentNote.note_id ?? "0" },
+            }}
+          >
             <FontAwesome5 name="external-link-alt" size={38} color="#020873" />
           </Link>
         </View>
