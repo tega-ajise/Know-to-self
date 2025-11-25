@@ -14,3 +14,12 @@ export interface NotificationMessage {
   body: string;
   data: object;
 }
+
+export interface PassageBody {
+  random_verse: {
+    text: string;
+    book: string;
+    chapter: string;
+    verse: string;
+  };
+}

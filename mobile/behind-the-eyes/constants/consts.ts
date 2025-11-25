@@ -18,3 +18,5 @@ export const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
   month: "long",
   day: "numeric",
 };
+
+export const BIBLE_API = "https://bible-api.com/data/web/random";

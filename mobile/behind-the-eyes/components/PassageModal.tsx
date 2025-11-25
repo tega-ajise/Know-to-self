@@ -1,28 +1,66 @@
 import { View, Text, Pressable, TextInput } from "react-native";
-import React, { useState } from "react";
-
-const testText = `Quiet mornings always feel like borrowed time. People move slowly, sunlight drifts across the room, and the world seems to take a breath before speeding up again. Nothing dramatic happens, but somehow it still feels meaningful.`;
-const randomNumberOfGaps = Math.floor(Math.random() * 10); // to generate within a range: Math.floor(Math.random() * (max - min + 1)) + min;
-const idxsToGap = Array.from(
-  { length: randomNumberOfGaps },
-  () => Math.floor(Math.random() * testText.split(" ").length) + 1
-);
-const uniqueIdxsToGap = new Set(idxsToGap);
+import React, { useEffect, useMemo, useState } from "react";
+import { BIBLE_API } from "@/constants/consts";
+import IdleScreen from "./IdleScreen";
+import { useAppProvider } from "@/hooks/provider";
 
 const PassageModal = ({
   setOpenModal,
 }: {
   setOpenModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
+  const { passage, setPassage } = useAppProvider();
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [gapValues, setGapValues] = useState<Record<number, string>>({});
+  const [loading, setLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchBibleVerse = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(BIBLE_API);
+        if (!res.ok) throw new Error("Could not fetch data");
+        const data = await res.json();
+        setPassage(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBibleVerse();
+  }, []);
+
+  const passageText = useMemo(() => {
+    if (!passage) return { text: "", verse: "" };
+    const { random_verse } = passage;
+    return {
+      text: random_verse?.text.replace(/\n/g, ""),
+      verse: `${random_verse?.book} ${random_verse?.chapter}:${random_verse?.verse}`,
+    };
+  }, [passage]);
+
+  const idxsToGap = useMemo(() => {
+    const randomNumberOfGaps = Math.floor(Math.random() * 10); // to generate within a range: Math.floor(Math.random() * (max - min + 1)) + min;
+
+    return Array.from(
+      { length: randomNumberOfGaps },
+      () => Math.floor(Math.random() * passageText.text.split(" ").length) + 1
+    );
+  }, [passageText]);
+  const uniqueIdxsToGap = new Set(idxsToGap);
 
   const handleSubmit = () => {
     idxsToGap.forEach((i) => {
-      setGapValues((prev) => ({ ...prev, [i]: testText.split(" ")[i] }));
+      setGapValues((prev) => ({
+        ...prev,
+        [i]: passageText.text.split(" ")[i],
+      }));
     });
     setIsSubmitted(true);
   };
+
+  if (loading) return <IdleScreen />;
 
   return (
     <Pressable
@@ -30,7 +68,7 @@ const PassageModal = ({
       onPress={() => {}} // so the press doesn't bubble up - this is why this is a pressable component
     >
       <View className="mb-4 flex-row items-center gap-1 flex-wrap">
-        {testText.split(" ").map((word, idx) => {
+        {passageText.text.split(" ").map((word: string, idx: number) => {
           return uniqueIdxsToGap.has(idx) ? (
             <TextInput
               key={idx}
@@ -40,7 +78,7 @@ const PassageModal = ({
               }
               className="border min-w-[50px] text-xl text-center"
               style={[
-                gapValues[idx] === testText.split(" ")[idx] &&
+                gapValues[idx] === passageText.text.split(" ")[idx] &&
                   !isSubmitted && {
                     borderColor: "green",
                     borderWidth: 2,
@@ -55,13 +93,14 @@ const PassageModal = ({
           );
         })}
       </View>
+      <Text className="text-xl font-semibold mb-4">{passageText.verse}</Text>
       <View className="bg-[#020873] rounded-lg">
         <Pressable
           onPress={isSubmitted ? () => setOpenModal(false) : handleSubmit}
           className="py-3 px-4"
         >
           <Text className="text-white font-bold text-center text-xl">
-            {isSubmitted ? "God is good!" : "Submit"}
+            {isSubmitted ? "God is good!" : "See Answer"}
           </Text>
         </Pressable>
       </View>

@@ -8,7 +8,7 @@ import React, {
 import * as SQLite from "expo-sqlite";
 import * as Notifications from "expo-notifications";
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
-import { NoteDTO, NotificationMessage } from "@/constants/types";
+import { NoteDTO, NotificationMessage, PassageBody } from "@/constants/types";
 import LoadingScreen from "@/components/LoadingScreen";
 import { DATE_FORMAT_OPTIONS } from "@/constants/consts";
 import registerForPushNotificationsAsync from "@/utils/notificationRegister";
@@ -22,6 +22,8 @@ interface AppContextType {
   handleNoteDelete: (id: number) => void;
   dbVersion: number;
   bumpDBVersion: () => void;
+  passage: PassageBody;
+  setPassage: React.Dispatch<React.SetStateAction<PassageBody>>;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -41,6 +43,10 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
   const [dbVersion, setDbVersion] = useState(0);
   const bumpDBVersion = () => setDbVersion((prev) => prev + 1);
   useDrizzleStudio(db);
+
+  const [passage, setPassage] = useState({
+    random_verse: { text: "", verse: "", book: "", chapter: "" },
+  });
 
   const message: NotificationMessage = {
     to: "expoPushToken",
@@ -196,6 +202,8 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
     handleNoteDelete,
     dbVersion,
     bumpDBVersion,
+    passage,
+    setPassage,
   };
 
   return (
