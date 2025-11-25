@@ -6,3 +6,11 @@ export interface NoteDTO {
   date?: Date | string;
   word_count: number;
 }
+
+export interface NotificationMessage {
+  to: string;
+  sound: "default";
+  title: string;
+  body: string;
+  data: object;
+}

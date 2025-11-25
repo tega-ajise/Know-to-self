@@ -1,9 +1,17 @@
-import React, { createContext, Suspense, useContext, useState } from "react";
+import React, {
+  createContext,
+  Suspense,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import * as SQLite from "expo-sqlite";
+import * as Notifications from "expo-notifications";
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
-import { NoteDTO } from "@/constants/types";
+import { NoteDTO, NotificationMessage } from "@/constants/types";
 import LoadingScreen from "@/components/LoadingScreen";
 import { DATE_FORMAT_OPTIONS } from "@/constants/consts";
+import registerForPushNotificationsAsync from "@/utils/notificationRegister";
 
 interface AppContextType {
   db: SQLite.SQLiteDatabase;
@@ -18,12 +26,56 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | null>(null);
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
+
 // Inner component that actually uses the DB
 const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
   const db = SQLite.useSQLiteContext(); // comes from SQLiteProvider
   const [dbVersion, setDbVersion] = useState(0);
   const bumpDBVersion = () => setDbVersion((prev) => prev + 1);
   useDrizzleStudio(db);
+
+  const message: NotificationMessage = {
+    to: "expoPushToken",
+    sound: "default",
+    title: "Original Title",
+    body: "And here is the body!",
+    data: { someData: "goes here" },
+  };
+
+  const [expoPushToken, setExpoPushToken] = useState("");
+  const [notification, setNotification] = useState<
+    Notifications.Notification | undefined
+  >(undefined);
+
+  useEffect(() => {
+    registerForPushNotificationsAsync()
+      .then((token) => setExpoPushToken(token ?? ""))
+      .catch((error: any) => setExpoPushToken(`${error}`));
+
+    const notificationListener = Notifications.addNotificationReceivedListener(
+      (notification) => {
+        setNotification(notification);
+      }
+    );
+
+    const responseListener =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log(response);
+      });
+
+    return () => {
+      notificationListener.remove();
+      responseListener.remove();
+    };
+  }, []);
 
   const [currentNote, setCurrentNote] = useState<NoteDTO>({
     title: "",
@@ -66,6 +118,20 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
       ];
       const { lastInsertRowId } = await statement.executeAsync(values);
       console.log({ lastInsertRowId });
+      if (formattedDate.trim()) {
+        Notifications.scheduleNotificationAsync({
+          content: {
+            title: title,
+            body: currentNote.content,
+            data: { id: currentNote.note_id },
+            sound: "default",
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: new Date(formattedDate),
+          },
+        });
+      }
     } catch (e: unknown) {
       alert((e as Error)?.message);
     } finally {
