@@ -45,6 +45,7 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
   useDrizzleStudio(db);
 
   const [passage, setPassage] = useState({
+    translation: { identifier: "" },
     random_verse: { text: "", verse: "", book: "", chapter: "" },
   });
 
