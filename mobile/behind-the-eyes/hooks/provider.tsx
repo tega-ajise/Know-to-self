@@ -9,9 +9,9 @@ import * as SQLite from "expo-sqlite";
 import * as Notifications from "expo-notifications";
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 import { NoteDTO, NotificationMessage, PassageBody } from "@/constants/types";
-import LoadingScreen from "@/components/LoadingScreen";
 import { DATE_FORMAT_OPTIONS } from "@/constants/consts";
 import registerForPushNotificationsAsync from "@/utils/notificationRegister";
+import IdleScreen from "@/components/IdleScreen";
 
 interface AppContextType {
   db: SQLite.SQLiteDatabase;
@@ -48,18 +48,18 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
     random_verse: { text: "", verse: "", book: "", chapter: "" },
   });
 
+  const [expoPushToken, setExpoPushToken] = useState("");
+  const [notification, setNotification] = useState<
+    Notifications.Notification | undefined
+  >(undefined);
+
   const message: NotificationMessage = {
-    to: "expoPushToken",
+    to: expoPushToken,
     sound: "default",
     title: "Original Title",
     body: "And here is the body!",
     data: { someData: "goes here" },
   };
-
-  const [expoPushToken, setExpoPushToken] = useState("");
-  const [notification, setNotification] = useState<
-    Notifications.Notification | undefined
-  >(undefined);
 
   useEffect(() => {
     registerForPushNotificationsAsync()
@@ -104,7 +104,7 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
       currentNote.date instanceof Date
         ? currentNote.date.toLocaleDateString(undefined, {
             ...DATE_FORMAT_OPTIONS,
-            hour: "2-digit",
+            hour: "numeric",
           })
         : "";
 
@@ -123,9 +123,14 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
         currentNote.word_count,
       ];
       const { lastInsertRowId } = await statement.executeAsync(values);
+
       console.log({ lastInsertRowId });
       if (formattedDate.trim()) {
-        Notifications.scheduleNotificationAsync({
+        const now = Date.now();
+        const triggerDate = new Date(formattedDate);
+        const safeDate =
+          triggerDate.getTime() <= now ? new Date(now + 5000) : triggerDate;
+        await Notifications.scheduleNotificationAsync({
           content: {
             title: title,
             body: currentNote.content,
@@ -134,12 +139,13 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
           },
           trigger: {
             type: Notifications.SchedulableTriggerInputTypes.DATE,
-            date: new Date(formattedDate),
+            date: safeDate,
           },
         });
       }
     } catch (e: unknown) {
       alert((e as Error)?.message);
+      throw e;
     } finally {
       setCurrentNote({
         content: "",
@@ -226,7 +232,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       `);
   };
   return (
-    <Suspense fallback={<LoadingScreen />}>
+    <Suspense fallback={<IdleScreen />}>
       <SQLite.SQLiteProvider
         databaseName="bte.db"
         useSuspense

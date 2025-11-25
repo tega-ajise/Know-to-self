@@ -33,10 +33,11 @@ const PassageModal = ({
 
   const passageText = useMemo(() => {
     if (!passage) return { text: "", verse: "" };
-    const { random_verse } = passage;
+    const { random_verse, translation } = passage;
     return {
       text: random_verse?.text.replace(/\n/g, ""),
       verse: `${random_verse?.book} ${random_verse?.chapter}:${random_verse?.verse}`,
+      version: translation.identifier,
     };
   }, [passage]);
 
@@ -93,7 +94,9 @@ const PassageModal = ({
           );
         })}
       </View>
-      <Text className="text-xl font-semibold mb-4">{passageText.verse}</Text>
+      <Text className="text-xl font-semibold mb-4">
+        {passageText.verse} {passageText.version?.toUpperCase()}
+      </Text>
       <View className="bg-[#020873] rounded-lg">
         <Pressable
           onPress={isSubmitted ? () => setOpenModal(false) : handleSubmit}

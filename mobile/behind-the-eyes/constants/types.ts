@@ -16,6 +16,9 @@ export interface NotificationMessage {
 }
 
 export interface PassageBody {
+  translation: {
+    identifier: string;
+  };
   random_verse: {
     text: string;
     book: string;
