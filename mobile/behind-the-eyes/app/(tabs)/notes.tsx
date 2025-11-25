@@ -11,6 +11,7 @@ import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import { useSQLiteContext } from "expo-sqlite";
 import { NoteDTO } from "@/constants/types";
 import { useFocusEffect } from "expo-router";
+import { useAppProvider } from "@/hooks/provider";
 
 const width = Dimensions.get("window").width;
 const height = Dimensions.get("window").height;
@@ -19,6 +20,7 @@ const Notes = () => {
   const ref = React.useRef<ICarouselInstance>(null);
   const progress = useSharedValue<number>(0);
   const db = useSQLiteContext();
+  const { dbVersion } = useAppProvider();
 
   const [data, setData] = useState<NoteDTO[]>([] as NoteDTO[]);
 
@@ -40,11 +42,12 @@ const Notes = () => {
         }
       };
       loadData();
+      void dbVersion;
 
       return () => {
         isPageActive = false;
       };
-    }, [setData, db]) // setters are stable, will never change, same with db, just for linting
+    }, [setData, db, dbVersion]) // setters are stable, will never change, same with db, just for linting
   );
 
   const onPressPagination = (index: number) => {

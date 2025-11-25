@@ -104,8 +104,12 @@ const FullScreenNote = () => {
         <TouchableOpacity
           className="absolute bottom-2 right-2"
           onPress={() => {
-            if (!noteId) return handleNoteSubmit();
-            handleNoteUpdate(activeNote);
+            if (!noteId) {
+              handleNoteSubmit();
+            } else {
+              handleNoteUpdate(activeNote);
+            }
+            router.back();
           }}
         >
           <FontAwesome name="check" size={30} />

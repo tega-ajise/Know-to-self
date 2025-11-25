@@ -12,6 +12,8 @@ interface AppContextType {
   handleNoteSubmit: () => void;
   handleNoteUpdate: (editedNote: NoteDTO) => void;
   handleNoteDelete: (id: number) => void;
+  dbVersion: number;
+  bumpDBVersion: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -19,6 +21,8 @@ const AppContext = createContext<AppContextType | null>(null);
 // Inner component that actually uses the DB
 const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
   const db = SQLite.useSQLiteContext(); // comes from SQLiteProvider
+  const [dbVersion, setDbVersion] = useState(0);
+  const bumpDBVersion = () => setDbVersion((prev) => prev + 1);
   useDrizzleStudio(db);
 
   const [currentNote, setCurrentNote] = useState<NoteDTO>({
@@ -34,10 +38,16 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
     }
     const now = new Date();
 
-    const title = currentNote.title?.trim() ?? now.toLocaleDateString();
+    const title =
+      currentNote.title?.trim().length > 0
+        ? currentNote.title
+        : now.toLocaleTimeString();
     const formattedDate =
       currentNote.date instanceof Date
-        ? currentNote.date.toLocaleDateString(undefined, DATE_FORMAT_OPTIONS)
+        ? currentNote.date.toLocaleDateString(undefined, {
+            ...DATE_FORMAT_OPTIONS,
+            hour: "2-digit",
+          })
         : "";
 
     const createdAt = now?.toLocaleDateString(undefined, DATE_FORMAT_OPTIONS);
@@ -78,10 +88,8 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
       `UPDATE journal_entries SET title = ?, content = ?, word_count = ?, date = ? WHERE note_id = ?`
     );
     try {
-      const formattedDate = (editedNote.date as Date).toLocaleDateString(
-        undefined,
-        DATE_FORMAT_OPTIONS
-      );
+      const formattedDate =
+        editedNote.date instanceof Date ? editedNote.date.toDateString() : "";
 
       await statement.executeAsync([
         editedNote.title,
@@ -90,6 +98,7 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
         formattedDate,
         editedNote.note_id!,
       ]);
+      bumpDBVersion();
     } catch (e) {
       console.error(e);
     } finally {
@@ -103,6 +112,7 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
     );
     try {
       await statement.executeAsync([id]);
+      bumpDBVersion();
     } catch (e) {
       alert("Unable to delete note");
       console.error(e);
@@ -118,6 +128,8 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
     handleNoteSubmit,
     handleNoteUpdate,
     handleNoteDelete,
+    dbVersion,
+    bumpDBVersion,
   };
 
   return (

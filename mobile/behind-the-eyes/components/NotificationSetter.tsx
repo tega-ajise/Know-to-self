@@ -22,7 +22,6 @@ export const NotificationSetter = ({
         onConfirm={(date) => {
           setOpen(false);
           setCurrentNote((prev) => ({ ...prev, date }));
-          console.log({ currentNote });
         }}
         onCancel={() => {
           setOpen(false);
