@@ -1,16 +1,27 @@
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-
-import React, { useState } from "react";
+import * as Notifications from "expo-notifications";
+import React, { useEffect, useState } from "react";
 import { MiniNote } from "@/components/MiniNote";
 import { Modal, TextInput, View, Pressable } from "react-native";
 import ProfileIcon from "@/components/ProfileIcon";
-import { Link } from "expo-router";
+import { Link, Redirect } from "expo-router";
 import PassageModal from "@/components/PassageModal";
-import { useAppProvider } from "@/hooks/provider";
+import { useAppProvider } from "@/provider/provider";
 
 const Home = () => {
-  const { currentNote, setCurrentNote } = useAppProvider();
+  const { currentNote, setCurrentNote, notification } = useAppProvider();
   const [openModal, setOpenModal] = useState<boolean>(true);
+
+  useEffect(() => {
+    const responseListener =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log(response);
+      });
+
+    return () => responseListener.remove();
+  }, [notification]);
+
+  if (notification) return <Redirect href="/kween" />;
 
   return (
     <>

@@ -69,6 +69,12 @@
         "projectId": "0f232cf6-8543-4370-91de-3fedec696578"
       }
     },
-    "owner": "tegaajise"
+    "owner": "tegaajise",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/0f232cf6-8543-4370-91de-3fedec696578"
+    }
   }
 }

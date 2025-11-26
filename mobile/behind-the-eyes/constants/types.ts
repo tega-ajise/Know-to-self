@@ -1,10 +1,14 @@
-export interface NoteDTO {
-  note_id?: number;
+export interface CreateNote {
   title: string;
   content: string;
-  created_at: Date | string | undefined;
-  date?: Date | string;
+  date?: Date;
   word_count: number;
+}
+
+export interface NoteTableEntry extends Omit<CreateNote, "date"> {
+  note_id: number;
+  created_at: string;
+  date: Date | string;
 }
 
 export interface NotificationMessage {

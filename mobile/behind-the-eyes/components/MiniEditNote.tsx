@@ -3,25 +3,34 @@ import { View, TextInput, TouchableOpacity, Alert } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { NoteDTO } from "@/constants/types";
-import { useAppProvider } from "@/hooks/provider";
+import { NoteTableEntry } from "@/constants/types";
+import { useAppProvider } from "@/provider/provider";
+import { NotificationSetter } from "./NotificationSetter";
 
-const MiniEditNote = ({ id }: { id: number }) => {
+const MiniEditNote = ({
+  id,
+  staysReadOnly,
+}: {
+  id: number;
+  staysReadOnly?: boolean;
+}) => {
   const db = useSQLiteContext();
   const { handleNoteDelete, handleNoteUpdate } = useAppProvider();
 
-  const [isReadOnly, setIsReadOnly] = useState<boolean>(true);
-  const [activeNote, setActiveNote] = useState<NoteDTO & { note_id: number }>({
+  const [openDatePicker, setOpenDatePicker] = useState<boolean>(false);
+  const [isReadOnly, setIsReadOnly] = useState<boolean>(staysReadOnly ?? true);
+  const [activeNote, setActiveNote] = useState<NoteTableEntry>({
     title: "",
     content: "",
     word_count: 0,
-    created_at: undefined,
+    created_at: "",
     note_id: 0,
+    date: "",
   });
 
   useEffect(() => {
     const loadNote = async () => {
-      const note = await db.getFirstAsync<NoteDTO & { note_id: number }>(
+      const note = await db.getFirstAsync<NoteTableEntry>(
         "SELECT * FROM journal_entries WHERE note_id = ?",
         [id]
       );
@@ -54,9 +63,11 @@ const MiniEditNote = ({ id }: { id: number }) => {
     >
       <View className="bg-[#FF6B85] rounded-[4px] translate-y-1 z-10">
         <View className="w-full flex flex-row justify-around px-6 py-2">
-          <TouchableOpacity>
-            <Ionicons name="calendar-clear" size={40} color="#020873" />
-          </TouchableOpacity>
+          {!isReadOnly && (
+            <TouchableOpacity onPress={() => setOpenDatePicker(true)}>
+              <Ionicons name="calendar-clear" size={40} color="#020873" />
+            </TouchableOpacity>
+          )}
           <Link
             href={{
               pathname: "/[noteId]",
@@ -65,9 +76,11 @@ const MiniEditNote = ({ id }: { id: number }) => {
           >
             <FontAwesome5 name="external-link-alt" size={38} color="#020873" />
           </Link>
-          <TouchableOpacity onPress={handleDelete}>
-            <FontAwesome5 name="trash-alt" size={38} color="#020873" />
-          </TouchableOpacity>
+          {!staysReadOnly && (
+            <TouchableOpacity onPress={handleDelete}>
+              <FontAwesome5 name="trash-alt" size={38} color="#020873" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
       <View className="flex flex-1 border-x-4 border-b-4 border-[#D9072D] bg-[rgba(217,7,45,0.7)] p-2">
@@ -82,23 +95,31 @@ const MiniEditNote = ({ id }: { id: number }) => {
           }
           readOnly={isReadOnly}
         />
-        <TouchableOpacity
-          className="self-end"
-          onPress={() => {
-            if (!isReadOnly) {
-              handleNoteUpdate(activeNote);
-            }
-            setIsReadOnly((prev) => !prev);
-          }}
-        >
-          <FontAwesome5
-            name={isReadOnly ? "edit" : "check"}
-            size={24}
-            color="#020873"
-            iconStyle={{ fontWeight: 10 }}
-          />
-        </TouchableOpacity>
+        {!staysReadOnly && (
+          <TouchableOpacity
+            className="self-end"
+            onPress={() => {
+              if (!isReadOnly) {
+                handleNoteUpdate(activeNote);
+              }
+              setIsReadOnly((prev) => !prev);
+            }}
+          >
+            <FontAwesome5
+              name={isReadOnly ? "edit" : "check"}
+              size={24}
+              color="#020873"
+              iconStyle={{ fontWeight: 10 }}
+            />
+          </TouchableOpacity>
+        )}
       </View>
+      <NotificationSetter
+        open={openDatePicker}
+        setOpen={setOpenDatePicker}
+        activeNote={activeNote}
+        setActiveNote={setActiveNote}
+      />
     </View>
   );
 };

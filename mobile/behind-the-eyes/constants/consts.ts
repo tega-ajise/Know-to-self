@@ -13,10 +13,13 @@ export const GIBBERISH = `Lorem ipsum dolor sit amet consectetur. Nunc sit egest
 Rhoncus consequat lacus arcu sapien.`;
 
 export const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
-  weekday: "long",
+  weekday: "short",
   year: "numeric",
-  month: "long",
+  month: "short",
   day: "numeric",
+  hour12: true,
+  hour: "2-digit",
+  minute: "numeric",
 };
 
 export const BIBLE_API = "https://bible-api.com/data/web/random";

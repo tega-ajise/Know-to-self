@@ -9,9 +9,10 @@ import MiniEditNote from "@/components/MiniEditNote";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import { useSQLiteContext } from "expo-sqlite";
-import { NoteDTO } from "@/constants/types";
+import { NoteTableEntry } from "@/constants/types";
 import { useFocusEffect } from "expo-router";
-import { useAppProvider } from "@/hooks/provider";
+import { useAppProvider } from "@/provider/provider";
+import { DATE_FORMAT_OPTIONS } from "@/constants/consts";
 
 const width = Dimensions.get("window").width;
 const height = Dimensions.get("window").height;
@@ -22,7 +23,7 @@ const Notes = () => {
   const db = useSQLiteContext();
   const { dbVersion } = useAppProvider();
 
-  const [data, setData] = useState<NoteDTO[]>([] as NoteDTO[]);
+  const [data, setData] = useState<NoteTableEntry[]>([] as NoteTableEntry[]);
 
   // Similar implementation to refreshControl in the FlatList
   useFocusEffect(
@@ -33,7 +34,7 @@ const Notes = () => {
 
       const loadData = async () => {
         try {
-          const entries = await db.getAllAsync<NoteDTO>(
+          const entries = await db.getAllAsync<NoteTableEntry>(
             "SELECT * FROM journal_entries"
           );
           if (isPageActive) setData(entries);
@@ -42,7 +43,7 @@ const Notes = () => {
         }
       };
       loadData();
-      void dbVersion;
+      console.log("session update made", dbVersion); // to satisfy linter
 
       return () => {
         isPageActive = false;
@@ -69,26 +70,35 @@ const Notes = () => {
         height={height - 300}
         data={data}
         onProgressChange={progress}
-        renderItem={({ item, index }) => (
-          <View className="translate-y-16">
-            <Text className="mx-auto text-5xl font-bold">{item?.title}</Text>
-            <View className="mx-auto mt-8">
-              <View className="flex flex-row items-center gap-1">
-                <FontAwesome5 name="pen" size={18} color="#A43232" />
-                <Text className="text-xl">{item.created_at as string}</Text>
+        renderItem={({ item }) => {
+          const createdAt = new Date(item.created_at).toLocaleDateString(
+            undefined,
+            { month: "short", day: "2-digit", year: "numeric" }
+          );
+          const alertDate = new Date(item.date).toLocaleString(
+            undefined,
+            DATE_FORMAT_OPTIONS
+          );
+
+          return (
+            <View className="translate-y-16">
+              <Text className="mx-auto text-5xl font-bold">{item?.title}</Text>
+              <View className="mx-auto mt-8">
+                <View className="flex flex-row items-center gap-1">
+                  <FontAwesome5 name="pen" size={18} color="#A43232" />
+                  <Text className="text-xl">{createdAt}</Text>
+                </View>
+                <MiniEditNote id={item.note_id} />
               </View>
-              <MiniEditNote id={item.note_id!} />
+              {item?.date && (
+                <View className="mt-4 mx-auto flex-row items-center gap-2">
+                  <FontAwesome name="bell" size={24} color="#A43232" />
+                  <Text className="text-xl font-semibold">{alertDate}</Text>
+                </View>
+              )}
             </View>
-            {item?.date && (
-              <View className="mt-4 mx-auto flex-row items-center gap-2">
-                <FontAwesome name="bell" size={24} color="#A43232" />
-                <Text className="text-xl font-semibold">
-                  {item?.date as string}
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
+          );
+        }}
       />
 
       <Pagination.Basic

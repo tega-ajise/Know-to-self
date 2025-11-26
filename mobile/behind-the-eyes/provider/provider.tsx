@@ -8,22 +8,21 @@ import React, {
 import * as SQLite from "expo-sqlite";
 import * as Notifications from "expo-notifications";
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
-import { NoteDTO, NotificationMessage, PassageBody } from "@/constants/types";
-import { DATE_FORMAT_OPTIONS } from "@/constants/consts";
-import registerForPushNotificationsAsync from "@/utils/notificationRegister";
+import { CreateNote, PassageBody, NoteTableEntry } from "@/constants/types";
 import IdleScreen from "@/components/IdleScreen";
 
 interface AppContextType {
   db: SQLite.SQLiteDatabase;
-  currentNote: NoteDTO;
-  setCurrentNote: React.Dispatch<React.SetStateAction<NoteDTO>>;
+  currentNote: CreateNote;
+  setCurrentNote: React.Dispatch<React.SetStateAction<CreateNote>>;
   handleNoteSubmit: () => void;
-  handleNoteUpdate: (editedNote: NoteDTO) => void;
+  handleNoteUpdate: (editedNote: NoteTableEntry) => void;
   handleNoteDelete: (id: number) => void;
   dbVersion: number;
   bumpDBVersion: () => void;
   passage: PassageBody;
   setPassage: React.Dispatch<React.SetStateAction<PassageBody>>;
+  notification: Notifications.Notification | undefined;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -40,56 +39,37 @@ Notifications.setNotificationHandler({
 // Inner component that actually uses the DB
 const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
   const db = SQLite.useSQLiteContext(); // comes from SQLiteProvider
+  useDrizzleStudio(db);
+
   const [dbVersion, setDbVersion] = useState(0);
   const bumpDBVersion = () => setDbVersion((prev) => prev + 1);
-  useDrizzleStudio(db);
 
   const [passage, setPassage] = useState({
     translation: { identifier: "" },
     random_verse: { text: "", verse: "", book: "", chapter: "" },
   });
 
-  const [expoPushToken, setExpoPushToken] = useState("");
   const [notification, setNotification] = useState<
     Notifications.Notification | undefined
   >(undefined);
 
-  const message: NotificationMessage = {
-    to: expoPushToken,
-    sound: "default",
-    title: "Original Title",
-    body: "And here is the body!",
-    data: { someData: "goes here" },
-  };
+  const [currentNote, setCurrentNote] = useState<CreateNote>({
+    title: "",
+    content: "",
+    word_count: 0,
+  });
 
   useEffect(() => {
-    registerForPushNotificationsAsync()
-      .then((token) => setExpoPushToken(token ?? ""))
-      .catch((error: any) => setExpoPushToken(`${error}`));
-
     const notificationListener = Notifications.addNotificationReceivedListener(
       (notification) => {
         setNotification(notification);
       }
     );
 
-    const responseListener =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log(response);
-      });
-
     return () => {
       notificationListener.remove();
-      responseListener.remove();
     };
   }, []);
-
-  const [currentNote, setCurrentNote] = useState<NoteDTO>({
-    title: "",
-    content: "",
-    created_at: undefined,
-    word_count: 0,
-  });
 
   const handleNoteSubmit = async () => {
     if (!currentNote.content?.trim()) {
@@ -101,15 +81,8 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
       currentNote.title?.trim().length > 0
         ? currentNote.title
         : now.toLocaleTimeString();
-    const formattedDate =
-      currentNote.date instanceof Date
-        ? currentNote.date.toLocaleDateString(undefined, {
-            ...DATE_FORMAT_OPTIONS,
-            hour: "numeric",
-          })
-        : "";
 
-    const createdAt = now?.toLocaleDateString(undefined, DATE_FORMAT_OPTIONS);
+    const formattedDate = currentNote?.date?.toString() ?? "";
 
     const statement = await db.prepareAsync(
       `INSERT INTO journal_entries(date, title, content, created_at, word_count) VALUES (?,?,?,?,?)`
@@ -120,29 +93,45 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
         formattedDate,
         title,
         currentNote.content,
-        createdAt,
+        now.toString(),
         currentNote.word_count,
       ];
       const { lastInsertRowId } = await statement.executeAsync(values);
 
       console.log({ lastInsertRowId });
-      if (formattedDate.trim()) {
-        const now = Date.now();
-        const triggerDate = new Date(formattedDate);
-        const safeDate =
-          triggerDate.getTime() <= now ? new Date(now + 5000) : triggerDate;
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: title,
-            body: currentNote.content,
-            data: { id: currentNote.note_id },
-            sound: "default",
-          },
-          trigger: {
-            type: Notifications.SchedulableTriggerInputTypes.DATE,
-            date: safeDate,
-          },
-        });
+      // only schedule if we have a date string
+      if (currentNote.date) {
+        // 1. Parse string → Date
+        let triggerDate = new Date(currentNote.date);
+
+        if (isNaN(triggerDate.getTime())) {
+          console.log(
+            "Invalid date string for notification:",
+            currentNote.date
+          );
+        } else {
+          // 2. If it's in the past, bump it 5 seconds into the future
+          const nowMs = Date.now();
+          if (triggerDate.getTime() <= nowMs) {
+            triggerDate = new Date(nowMs + 5000);
+          }
+
+          console.log("Scheduling notification at:", triggerDate.toISOString());
+
+          // 3. Schedule with a DATE trigger (TS-safe)
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title,
+              body: currentNote.content,
+              data: { title: currentNote.title },
+              sound: "default",
+            },
+            trigger: {
+              type: Notifications.SchedulableTriggerInputTypes.DATE,
+              date: triggerDate,
+            },
+          });
+        }
       }
     } catch (e: unknown) {
       alert((e as Error)?.message);
@@ -151,14 +140,13 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
       setCurrentNote({
         content: "",
         title: "",
-        created_at: undefined,
         word_count: 0,
       });
       await statement.finalizeAsync();
     }
   };
 
-  const handleNoteUpdate = async (editedNote: NoteDTO) => {
+  const handleNoteUpdate = async (editedNote: NoteTableEntry) => {
     if (!editedNote.content?.trim() || !editedNote.title?.trim()) {
       return alert("Values for one or more fields missing!");
     }
@@ -167,16 +155,39 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
       `UPDATE journal_entries SET title = ?, content = ?, word_count = ?, date = ? WHERE note_id = ?`
     );
     try {
-      const formattedDate =
-        editedNote.date instanceof Date ? editedNote.date.toDateString() : "";
+      const formattedDate = editedNote.date.toString() ?? "";
 
       await statement.executeAsync([
         editedNote.title,
         editedNote.content,
         editedNote.word_count,
         formattedDate,
-        editedNote.note_id!,
+        editedNote.note_id,
       ]);
+      if (editedNote.date && editedNote.date instanceof Date) {
+        let triggerDate = editedNote.date;
+        // 2. If it's in the past, bump it 5 seconds into the future
+        const nowMs = Date.now();
+        if (editedNote.date.getTime() <= nowMs) {
+          triggerDate = new Date(nowMs + 5000);
+        }
+
+        console.log("Scheduling notification at:", triggerDate.toISOString());
+
+        // 3. Schedule with a DATE trigger (TS-safe)
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: editedNote.title,
+            body: editedNote.content,
+            data: { title: currentNote.title },
+            sound: "default",
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: triggerDate,
+          },
+        });
+      }
       bumpDBVersion();
     } catch (e) {
       console.error(e);
@@ -211,6 +222,7 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
     bumpDBVersion,
     passage,
     setPassage,
+    notification,
   };
 
   return (

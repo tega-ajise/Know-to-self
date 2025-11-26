@@ -1,18 +1,20 @@
-import { View, TextInput, TouchableOpacity } from "react-native";
+import { View, TextInput, TouchableOpacity, Alert } from "react-native";
 import React, { useCallback, useState } from "react";
 import { GIBBERISH } from "@/constants/consts";
 import { FontAwesome, AntDesign } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { useAppProvider } from "@/hooks/provider";
-import { NoteDTO } from "@/constants/types";
+import { useAppProvider } from "@/provider/provider";
+import { CreateNote, NoteTableEntry } from "@/constants/types";
 
 const FullScreenNote = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{ noteId: string }>();
   const noteId = params.noteId.trim() ? Number(params.noteId) : undefined;
 
-  const [activeNote, setActiveNote] = useState<NoteDTO>({} as NoteDTO);
+  const [activeNote, setActiveNote] = useState<NoteTableEntry>(
+    {} as NoteTableEntry
+  );
 
   const {
     db,
@@ -29,7 +31,7 @@ const FullScreenNote = () => {
       const loadNote = async () => {
         if (!noteId) return;
         try {
-          const activeNote = await db.getFirstAsync<NoteDTO>(
+          const activeNote = await db.getFirstAsync<NoteTableEntry>(
             "SELECT * FROM journal_entries WHERE note_id = ?",
             [noteId]
           );
@@ -40,7 +42,10 @@ const FullScreenNote = () => {
                 note_id: noteId,
                 title: "",
                 content: "",
-              } as NoteDTO);
+                created_at: "",
+                word_count: 0,
+                date: "",
+              });
             }
             return;
           }
@@ -58,7 +63,7 @@ const FullScreenNote = () => {
     }, [noteId, setActiveNote, db])
   );
 
-  const handleChange = (updateField: Partial<NoteDTO>) => {
+  const handleChange = (updateField: Partial<NoteTableEntry & CreateNote>) => {
     if (!noteId) {
       setCurrentNote((prev) => ({
         ...prev,
@@ -70,6 +75,20 @@ const FullScreenNote = () => {
         ...updateField,
       }));
     }
+  };
+
+  const handleUpdate = () => {
+    Alert.alert("Update note", "Are you sure you want to update this note?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Confirm",
+        style: "default",
+        onPress: () => {
+          handleNoteUpdate(activeNote);
+          router.back();
+        },
+      },
+    ]);
   };
 
   return (
@@ -106,10 +125,10 @@ const FullScreenNote = () => {
           onPress={() => {
             if (!noteId) {
               handleNoteSubmit();
+              router.back();
             } else {
-              handleNoteUpdate(activeNote);
+              handleUpdate();
             }
-            router.back();
           }}
         >
           <FontAwesome name="check" size={30} />

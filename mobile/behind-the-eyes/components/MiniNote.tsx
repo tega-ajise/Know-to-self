@@ -3,7 +3,7 @@ import { Link } from "expo-router";
 import { useState } from "react";
 import { View, TouchableOpacity, TextInput } from "react-native";
 import { NotificationSetter } from "./NotificationSetter";
-import { useAppProvider } from "@/hooks/provider";
+import { useAppProvider } from "@/provider/provider";
 
 export const MiniNote = () => {
   const [openDatePicker, setOpenDatePicker] = useState(false);
@@ -28,7 +28,7 @@ export const MiniNote = () => {
           <Link
             href={{
               pathname: "/[noteId]",
-              params: { noteId: currentNote.note_id ?? "0" },
+              params: { noteId: "0" }, // meaning noteId will pass false
             }}
           >
             <FontAwesome5 name="external-link-alt" size={38} color="#020873" />

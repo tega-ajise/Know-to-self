@@ -2,7 +2,7 @@ import { View, Text, Pressable, TextInput } from "react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import { BIBLE_API } from "@/constants/consts";
 import IdleScreen from "./IdleScreen";
-import { useAppProvider } from "@/hooks/provider";
+import { useAppProvider } from "@/provider/provider";
 
 const PassageModal = ({
   setOpenModal,
@@ -29,7 +29,7 @@ const PassageModal = ({
       }
     };
     fetchBibleVerse();
-  }, []);
+  });
 
   const passageText = useMemo(() => {
     if (!passage) return { text: "", verse: "" };
