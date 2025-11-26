@@ -1,12 +1,29 @@
 import { Pressable, View, Text } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useAppProvider } from "@/provider/provider";
 import MiniEditNote from "@/components/MiniEditNote";
+import { NoteTableEntry } from "@/constants/types";
 
 const Spotlight = () => {
-  const { passage, notification } = useAppProvider();
-  const spotLightId = notification?.request?.content?.data?.id;
+  const { passage, notification, db } = useAppProvider();
+  const [spotLightId, setSpotlightId] = useState<number>();
   const spotLightTitle = notification?.request?.content?.title;
+
+  useEffect(() => {
+    const fetchSpotlightNote = async () => {
+      try {
+        const noteId = await db.getFirstAsync<NoteTableEntry["note_id"]>(
+          "SELECT note_id FROM journal_entries WHERE title = ?",
+          [String(notification?.request.content.data?.title)]
+        );
+        if (!noteId) throw new Error("Note not found");
+        setSpotlightId(noteId);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    if (notification) fetchSpotlightNote();
+  }, [notification, db]);
 
   return (
     <View>

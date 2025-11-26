@@ -133,15 +133,19 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
           });
         }
       }
-    } catch (e: unknown) {
-      alert((e as Error)?.message);
-      throw e;
-    } finally {
       setCurrentNote({
         content: "",
         title: "",
         word_count: 0,
       });
+    } catch (e: unknown) {
+      if ((e as Error).message.includes("code 19")) {
+        alert("Title already exists!");
+        return;
+      } else {
+        throw e;
+      }
+    } finally {
       await statement.finalizeAsync();
     }
   };

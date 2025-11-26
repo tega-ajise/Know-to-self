@@ -29,7 +29,7 @@ const PassageModal = ({
       }
     };
     fetchBibleVerse();
-  });
+  }, []);
 
   const passageText = useMemo(() => {
     if (!passage) return { text: "", verse: "" };
