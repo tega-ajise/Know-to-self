@@ -6,7 +6,7 @@ export default function Help() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.heading}>Welcome</Text>
 
-      <Text style={styles.sectionTitle}>This app is your safe space</Text>
+      <Text style={styles.sectionTitle}>This is your safe space</Text>
       <Text style={styles.body}>
         This is a place meant just for you. Everything you write stays on your
         device, and no one else sees it. Think of it as a quiet corner where you

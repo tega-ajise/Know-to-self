@@ -3,7 +3,7 @@ import { Link } from "expo-router";
 import { useState } from "react";
 import { View, TouchableOpacity, TextInput } from "react-native";
 import { NotificationSetter } from "./NotificationSetter";
-import { useAppProvider } from "@/provider/provider";
+import { useAppProvider } from "@/hooks/provider";
 
 export const MiniNote = () => {
   const [openDatePicker, setOpenDatePicker] = useState(false);

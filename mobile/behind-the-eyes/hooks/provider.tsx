@@ -10,6 +10,8 @@ import * as Notifications from "expo-notifications";
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 import { CreateNote, PassageBody, NoteTableEntry } from "@/constants/types";
 import IdleScreen from "@/components/IdleScreen";
+import fetchBiblePassage from "./useBiblePassages";
+import { useRouter } from "expo-router";
 
 interface AppContextType {
   db: SQLite.SQLiteDatabase;
@@ -20,9 +22,12 @@ interface AppContextType {
   handleNoteDelete: (id: number) => void;
   dbVersion: number;
   bumpDBVersion: () => void;
-  passage: PassageBody;
-  setPassage: React.Dispatch<React.SetStateAction<PassageBody>>;
+  passage: PassageBody | undefined;
+  setPassage: React.Dispatch<React.SetStateAction<PassageBody | undefined>>;
   notification: Notifications.Notification | undefined;
+  setNotification: React.Dispatch<
+    React.SetStateAction<Notifications.Notification | undefined>
+  >;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -38,13 +43,14 @@ Notifications.setNotificationHandler({
 
 // Inner component that actually uses the DB
 const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
+  const router = useRouter();
   const db = SQLite.useSQLiteContext(); // comes from SQLiteProvider
   useDrizzleStudio(db);
 
   const [dbVersion, setDbVersion] = useState(0);
   const bumpDBVersion = () => setDbVersion((prev) => prev + 1);
 
-  const [passage, setPassage] = useState({
+  const [passage, setPassage] = useState<PassageBody | undefined>({
     translation: { identifier: "" },
     random_verse: { text: "", verse: "", book: "", chapter: "" },
   });
@@ -60,16 +66,57 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
   });
 
   useEffect(() => {
+    // 2. Foreground delivery (notification arrives while app is open)
     const notificationListener = Notifications.addNotificationReceivedListener(
       (notification) => {
         setNotification(notification);
       }
     );
 
+    // 3. Background → foreground via tap
+    const responseListener =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log("Notification tapped");
+        const tappedNotification = response.notification;
+        setNotification(tappedNotification);
+
+        const url = tappedNotification.request.content.data?.url;
+
+        if (url) {
+          router.replace(url);
+        }
+      });
+
+    // 4. Other startup logic
+    const loadData = async () => {
+      const psg = await fetchBiblePassage();
+      setPassage(psg);
+    };
+    // Handle cold start (if app opened from a killed state via notification)
+    const loadNotification = async () => {
+      const lastResponse =
+        await Notifications.getLastNotificationResponseAsync();
+
+      if (lastResponse) {
+        const tappedNotification = lastResponse.notification;
+        setNotification(tappedNotification);
+
+        const url = tappedNotification.request.content.data?.url;
+
+        if (url) {
+          router.replace(url);
+        }
+      }
+    };
+
+    loadData();
+    loadNotification();
+
     return () => {
       notificationListener.remove();
+      responseListener.remove();
     };
-  }, []);
+  }, [router]);
 
   const handleNoteSubmit = async () => {
     if (!currentNote.content?.trim()) {
@@ -123,7 +170,7 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
             content: {
               title,
               body: currentNote.content,
-              data: { title: currentNote.title },
+              data: { url: "/(tabs)/kween" },
               sound: "default",
             },
             trigger: {
@@ -183,7 +230,7 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
           content: {
             title: editedNote.title,
             body: editedNote.content,
-            data: { title: currentNote.title },
+            data: { url: "/(tabs)/kween" },
             sound: "default",
           },
           trigger: {
@@ -227,6 +274,7 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
     passage,
     setPassage,
     notification,
+    setNotification,
   };
 
   return (

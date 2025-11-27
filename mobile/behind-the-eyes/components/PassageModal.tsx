@@ -1,35 +1,16 @@
 import { View, Text, Pressable, TextInput } from "react-native";
-import React, { useEffect, useMemo, useState } from "react";
-import { BIBLE_API } from "@/constants/consts";
+import React, { useMemo, useState } from "react";
+import { useAppProvider } from "@/hooks/provider";
 import IdleScreen from "./IdleScreen";
-import { useAppProvider } from "@/provider/provider";
 
 const PassageModal = ({
   setOpenModal,
 }: {
   setOpenModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-  const { passage, setPassage } = useAppProvider();
+  const { passage } = useAppProvider();
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [gapValues, setGapValues] = useState<Record<number, string>>({});
-  const [loading, setLoading] = useState<boolean>(false);
-
-  useEffect(() => {
-    const fetchBibleVerse = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(BIBLE_API);
-        if (!res.ok) throw new Error("Could not fetch data");
-        const data = await res.json();
-        setPassage(data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBibleVerse();
-  }, []);
 
   const passageText = useMemo(() => {
     if (!passage) return { text: "", verse: "" };
@@ -61,7 +42,7 @@ const PassageModal = ({
     setIsSubmitted(true);
   };
 
-  if (loading) return <IdleScreen />;
+  if (!passageText.text) return <IdleScreen />;
 
   return (
     <Pressable

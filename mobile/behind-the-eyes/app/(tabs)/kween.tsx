@@ -1,8 +1,8 @@
 import { Pressable, View, Text } from "react-native";
 import React, { useEffect, useState } from "react";
-import { useAppProvider } from "@/provider/provider";
+import { useAppProvider } from "@/hooks/provider";
 import MiniEditNote from "@/components/MiniEditNote";
-import { NoteTableEntry } from "@/constants/types";
+import IdleScreen from "@/components/IdleScreen";
 
 const Spotlight = () => {
   const { passage, notification, db } = useAppProvider();
@@ -12,18 +12,28 @@ const Spotlight = () => {
   useEffect(() => {
     const fetchSpotlightNote = async () => {
       try {
-        const noteId = await db.getFirstAsync<NoteTableEntry["note_id"]>(
+        const row = await db.getFirstAsync<{ note_id: number }>(
           "SELECT note_id FROM journal_entries WHERE title = ?",
-          [String(notification?.request.content.data?.title)]
+          [String(notification?.request.content.title)]
         );
-        if (!noteId) throw new Error("Note not found");
-        setSpotlightId(noteId);
+
+        if (!row) {
+          throw new Error("Note not found");
+        }
+
+        setSpotlightId(row.note_id);
       } catch (error) {
-        console.error(error);
+        console.error("Failed to fetch spotlight note:", error);
       }
     };
+
     if (notification) fetchSpotlightNote();
+    else {
+      // get a random note here
+    }
   }, [notification, db]);
+
+  if (!passage?.random_verse.text) return <IdleScreen />;
 
   return (
     <View>
@@ -34,20 +44,22 @@ const Spotlight = () => {
           onPress={() => {}} // so the press doesn't bubble up - this is why this is a pressable component
         >
           <View className="mb-2 flex-row items-center gap-1 flex-wrap">
-            <Text className="text-xl">{passage.random_verse.text}</Text>
+            <Text className="text-xl">{passage?.random_verse.text}</Text>
           </View>
           <Text className="text-2xl font-semibold">
-            {passage.random_verse.book} {passage.random_verse.chapter}
+            {passage?.random_verse.book} {passage?.random_verse.chapter}
             {":"}
-            {passage.random_verse.verse}{" "}
-            {passage.translation.identifier.toUpperCase()}
+            {passage?.random_verse.verse}{" "}
+            {passage?.translation.identifier.toUpperCase()}
           </Text>
         </Pressable>
       </View>
       {/** Note of the day */}
       <View className="bg-[#820e1e] h-1/2">
-        <Text>{spotLightTitle}</Text>
-        <View className="min-w-[400px] flex justify-center items-center">
+        <Text className="text-center text-3xl color-white font-semibold mt-4">
+          {spotLightTitle}
+        </Text>
+        <View className="min-w-[400px] flex justify-center items-center mt-2">
           <MiniEditNote id={Number(spotLightId)} staysReadOnly />
         </View>
       </View>

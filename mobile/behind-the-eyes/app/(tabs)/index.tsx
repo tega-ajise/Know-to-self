@@ -1,37 +1,22 @@
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import * as Notifications from "expo-notifications";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { MiniNote } from "@/components/MiniNote";
 import { Modal, TextInput, View, Pressable } from "react-native";
 import ProfileIcon from "@/components/ProfileIcon";
-import { Link, Redirect } from "expo-router";
+import { Link } from "expo-router";
 import PassageModal from "@/components/PassageModal";
-import { useAppProvider } from "@/provider/provider";
+import { useAppProvider } from "@/hooks/provider";
 
 const Home = () => {
-  const { currentNote, setCurrentNote, notification } = useAppProvider();
+  const { currentNote, setCurrentNote } = useAppProvider();
   const [openModal, setOpenModal] = useState<boolean>(true);
-
-  useEffect(() => {
-    const responseListener =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log(response);
-      });
-
-    return () => responseListener.remove();
-  }, [notification]);
-
-  if (notification) return <Redirect href="/kween" />;
 
   return (
     <>
       {/* MODAL (artifically takes up full screen */}
       <Modal visible={openModal} animationType="fade" transparent>
         {/* Overlay */}
-        <Pressable
-          className="flex-1 justify-center items-center bg-black/50"
-          onPress={() => setOpenModal(false)} // tap outside to close
-        >
+        <Pressable className="flex-1 justify-center items-center bg-black/50">
           {/** Actual modal card */}
           <PassageModal setOpenModal={setOpenModal} />
         </Pressable>
@@ -49,7 +34,7 @@ const Home = () => {
         <View className="flex-1 flex justify-center">
           <TextInput
             className="text-5xl text-center placeholder:text-black/60 mb-8"
-            placeholder="Title Here"
+            placeholder="Title (Optional)"
             value={currentNote.title}
             onChangeText={(t) =>
               setCurrentNote((prev) => ({

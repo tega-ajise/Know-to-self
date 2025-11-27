@@ -4,7 +4,7 @@ import { GIBBERISH } from "@/constants/consts";
 import { FontAwesome, AntDesign } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { useAppProvider } from "@/provider/provider";
+import { useAppProvider } from "@/hooks/provider";
 import { CreateNote, NoteTableEntry } from "@/constants/types";
 
 const FullScreenNote = () => {
@@ -110,6 +110,7 @@ const FullScreenNote = () => {
           className="text-4xl color-white"
           value={!noteId ? currentNote.title : activeNote.title}
           onChangeText={(t) => handleChange({ title: t })}
+          multiline
         />
         <TextInput
           multiline

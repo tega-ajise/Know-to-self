@@ -1,5 +1,5 @@
 import { NoteTableEntry } from "@/constants/types";
-import { useAppProvider } from "@/provider/provider";
+import { useAppProvider } from "@/hooks/provider";
 import React from "react";
 import DatePicker from "react-native-date-picker";
 

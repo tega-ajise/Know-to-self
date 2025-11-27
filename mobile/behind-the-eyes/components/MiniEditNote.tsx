@@ -4,7 +4,7 @@ import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { NoteTableEntry } from "@/constants/types";
-import { useAppProvider } from "@/provider/provider";
+import { useAppProvider } from "@/hooks/provider";
 import { NotificationSetter } from "./NotificationSetter";
 
 const MiniEditNote = ({

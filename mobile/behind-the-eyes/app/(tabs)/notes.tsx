@@ -1,5 +1,5 @@
 import { Dimensions, View, Text } from "react-native";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useSharedValue } from "react-native-reanimated";
 import Carousel, {
   ICarouselInstance,
@@ -11,7 +11,7 @@ import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import { useSQLiteContext } from "expo-sqlite";
 import { NoteTableEntry } from "@/constants/types";
 import { useFocusEffect } from "expo-router";
-import { useAppProvider } from "@/provider/provider";
+import { useAppProvider } from "@/hooks/provider";
 import { DATE_FORMAT_OPTIONS } from "@/constants/consts";
 
 const width = Dimensions.get("window").width;

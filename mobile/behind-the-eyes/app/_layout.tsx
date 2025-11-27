@@ -1,9 +1,8 @@
 import { AppState } from "react-native";
 import { Stack } from "expo-router";
 import SafeScreen from "@/components/SafeArea";
-
 import "@/global.css";
-import { AppProvider } from "@/provider/provider";
+import { AppProvider } from "@/hooks/provider";
 import { useEffect, useRef, useState } from "react";
 import IdleScreen from "@/components/IdleScreen";
 
