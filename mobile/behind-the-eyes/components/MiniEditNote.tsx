@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { View, TextInput, TouchableOpacity, Alert } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
-import { Link } from "expo-router";
+import { Link, useFocusEffect } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { NoteTableEntry } from "@/constants/types";
 import { useAppProvider } from "@/hooks/provider";
@@ -28,16 +28,19 @@ const MiniEditNote = ({
     date: "",
   });
 
-  useEffect(() => {
-    const loadNote = async () => {
-      const note = await db.getFirstAsync<NoteTableEntry>(
-        "SELECT * FROM journal_entries WHERE note_id = ?",
-        [id]
-      );
-      if (note) setActiveNote(note);
-    };
-    loadNote();
-  }, [db, id]);
+  // useFocusEffect for the spotlight note case if it gets updated
+  useFocusEffect(
+    useCallback(() => {
+      const loadNote = async () => {
+        const note = await db.getFirstAsync<NoteTableEntry>(
+          "SELECT * FROM journal_entries WHERE note_id = ?",
+          [id]
+        );
+        if (note) setActiveNote(note);
+      };
+      loadNote();
+    }, [db, id])
+  );
 
   const handleDelete = () => {
     Alert.alert("Delete Note", "Are you sure you want to delete this note?", [

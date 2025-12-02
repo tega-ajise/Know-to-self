@@ -28,6 +28,8 @@ interface AppContextType {
   setNotification: React.Dispatch<
     React.SetStateAction<Notifications.Notification | undefined>
   >;
+  openModal: boolean;
+  setOpenModal: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -46,7 +48,7 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const db = SQLite.useSQLiteContext(); // comes from SQLiteProvider
   useDrizzleStudio(db);
-
+  const [openModal, setOpenModal] = useState<boolean>(true);
   const [dbVersion, setDbVersion] = useState(0);
   const bumpDBVersion = () => setDbVersion((prev) => prev + 1);
 
@@ -74,6 +76,7 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
     );
 
     // 3. Background → foreground via tap
+    // (callback only works while app is open, if app in background it's a cold start)
     const responseListener =
       Notifications.addNotificationResponseReceivedListener((response) => {
         console.log("Notification tapped");
@@ -93,9 +96,8 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
       setPassage(psg);
     };
     // Handle cold start (if app opened from a killed state via notification)
-    const loadNotification = async () => {
-      const lastResponse =
-        await Notifications.getLastNotificationResponseAsync();
+    const loadNotification = () => {
+      const lastResponse = Notifications.getLastNotificationResponse();
 
       if (lastResponse) {
         const tappedNotification = lastResponse.notification;
@@ -275,6 +277,8 @@ const AppProviderInner = ({ children }: { children: React.ReactNode }) => {
     setPassage,
     notification,
     setNotification,
+    openModal,
+    setOpenModal,
   };
 
   return (

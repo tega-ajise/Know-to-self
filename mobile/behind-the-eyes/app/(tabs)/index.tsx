@@ -1,5 +1,5 @@
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import React, { useState } from "react";
+import React from "react";
 import { MiniNote } from "@/components/MiniNote";
 import { Modal, TextInput, View, Pressable } from "react-native";
 import ProfileIcon from "@/components/ProfileIcon";
@@ -8,17 +8,16 @@ import PassageModal from "@/components/PassageModal";
 import { useAppProvider } from "@/hooks/provider";
 
 const Home = () => {
-  const { currentNote, setCurrentNote } = useAppProvider();
-  const [openModal, setOpenModal] = useState<boolean>(true);
+  const { currentNote, setCurrentNote, openModal } = useAppProvider();
 
   return (
     <>
       {/* MODAL (artifically takes up full screen */}
       <Modal visible={openModal} animationType="fade" transparent>
-        {/* Overlay */}
+        {/* Overlay (removed onclick so they can't "tap out" to cancel modal) */}
         <Pressable className="flex-1 justify-center items-center bg-black/50">
           {/** Actual modal card */}
-          <PassageModal setOpenModal={setOpenModal} />
+          <PassageModal />
         </Pressable>
       </Modal>
 
@@ -28,6 +27,7 @@ const Home = () => {
         enableOnAndroid
         enableAutomaticScroll
       >
+        {/** push prop is automatically applied for stack navigator */}
         <Link className="ml-auto p-4" href="/profile">
           <ProfileIcon />
         </Link>

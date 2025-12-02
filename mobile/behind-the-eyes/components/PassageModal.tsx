@@ -3,12 +3,8 @@ import React, { useMemo, useState } from "react";
 import { useAppProvider } from "@/hooks/provider";
 import IdleScreen from "./IdleScreen";
 
-const PassageModal = ({
-  setOpenModal,
-}: {
-  setOpenModal: React.Dispatch<React.SetStateAction<boolean>>;
-}) => {
-  const { passage } = useAppProvider();
+const PassageModal = () => {
+  const { passage, setOpenModal } = useAppProvider();
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [gapValues, setGapValues] = useState<Record<number, string>>({});
 
@@ -45,10 +41,7 @@ const PassageModal = ({
   if (!passageText.text) return <IdleScreen />;
 
   return (
-    <Pressable
-      className="w-5/6 p-6 rounded-2xl bg-[#A2D4F2]"
-      onPress={() => {}} // so the press doesn't bubble up - this is why this is a pressable component
-    >
+    <View className="w-5/6 p-6 rounded-2xl bg-[#A2D4F2]">
       <View className="mb-4 flex-row items-center gap-1 flex-wrap">
         {passageText.text.split(" ").map((word: string, idx: number) => {
           return uniqueIdxsToGap.has(idx) ? (
@@ -78,17 +71,15 @@ const PassageModal = ({
       <Text className="text-xl font-semibold mb-4">
         {passageText.verse} {passageText.version?.toUpperCase()}
       </Text>
-      <View className="bg-[#020873] rounded-lg">
-        <Pressable
-          onPress={isSubmitted ? () => setOpenModal(false) : handleSubmit}
-          className="py-3 px-4"
-        >
-          <Text className="text-white font-bold text-center text-xl">
-            {isSubmitted ? "God is good!" : "See Answer"}
-          </Text>
-        </Pressable>
-      </View>
-    </Pressable>
+      <Pressable
+        onPress={isSubmitted ? () => setOpenModal(false) : handleSubmit}
+        className="py-3 px-4 bg-[#020873] rounded-lg"
+      >
+        <Text className="text-white font-bold text-center text-xl">
+          {isSubmitted ? "God is good!" : "See Answer"}
+        </Text>
+      </Pressable>
+    </View>
   );
 };
 

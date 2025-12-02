@@ -38,11 +38,7 @@ export default function RootLayout() {
           screenOptions={{
             headerShown: false,
           }}
-        >
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="profile" />
-          <Stack.Screen name="[noteId]" />
-        </Stack>
+        />
       </SafeScreen>
     </AppProvider>
   );

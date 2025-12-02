@@ -62,6 +62,15 @@ const Notes = () => {
     });
   };
 
+  if (data.length === 0)
+    return (
+      <View className="flex-1 bg-[#FFD0EB]">
+        <View className="m-auto">
+          <Text className="font-bold">Create your first note now!</Text>
+        </View>
+      </View>
+    );
+
   return (
     <KeyboardAwareScrollView style={{ backgroundColor: "#FFD0EB" }}>
       <Carousel
@@ -81,8 +90,10 @@ const Notes = () => {
           );
 
           return (
-            <View className="translate-y-16">
-              <Text className="mx-auto text-5xl font-bold">{item?.title}</Text>
+            <View className="translate-y-16 p-2">
+              <Text className="mx-auto text-5xl font-bold text-center">
+                {item?.title}
+              </Text>
               <View className="mx-auto mt-8">
                 <View className="flex flex-row items-center gap-1">
                   <FontAwesome5 name="pen" size={18} color="#A43232" />

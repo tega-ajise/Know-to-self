@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "behind-the-eyes",
+    "name": "Know To Self",
     "slug": "behind-the-eyes",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "behindtheeyes",
+    "icon": "./assets/images/app-icon.png",
+    "scheme": "knowtoself",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.tegaajise.behind-the-eyes",
+      "bundleIdentifier": "com.tegaajise.know-to-self",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -24,7 +24,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.tegaajise.behindtheeyes"
+      "package": "com.tegaajise.knowtoself"
     },
     "web": {
       "output": "static",
@@ -51,9 +51,7 @@
           "icon": "./assets/profile_photo.png",
           "color": "#DC143C",
           "defaultChannel": "default",
-          "sounds": [
-            "./assets/audio/mixkit-positive-notification-951.wav"
-          ],
+          "sounds": ["./assets/audio/mixkit-positive-notification-951.wav"],
           "enableBackgroundRemoteNotifications": false
         }
       ],
